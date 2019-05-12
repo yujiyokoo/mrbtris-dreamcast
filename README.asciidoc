@@ -1,0 +1,39 @@
+= mrbtris-dreamcast
+
+mrbtris-dreamcast is a simple game for Dreamcast, written in mruby as an example for the mruby-dreamcast project.
+
+== Goals
+
+This project aims to provide a simple example of how to use and extend the mruby and KOS API on Dreamcast.
+
+== What you need
+
+Please get the mruby-dreamcast environment set up.
+
+== Build
+
+If everything is set up, `make` in the project directory should produce an elf binary.
+
+== Running
+
+To check that it at least runs, you can use emulators.
+In my experience, lxdream can boot elf and seems to work well enough to check it runs, but text display doesn't seem to render properly.
+You could still check that it boots up even without text.
+Run `lxdream -e mrbtris.elf` or `lxdream mrbtris.elf`, depending on your lxdream version, from your terminal.
+
+Unfortunately, running on the real device has been the only way for me to test text display and actual performance, but it may be different in your environment.
+
+If you have a Dreamcast serial cable or a broadband adapter (BBA), you could also use programs like dcload to load it on dreamcast.
+
+You could also use a DVD-R drive and write it on a bootable CD-R.
+One easy method is to use programs like Bootdreams that can take care of self-boot related issues.
+
+== TODOs
+
+* Make an mrbgem for the Dreamcast specific things
+* Unit tests
+* Use more Dreamcast features
+
+== Licence
+
+This project is licenced under the MIT licence.
