@@ -4,4 +4,6 @@
 *.elf
 romdisk.*
 
+README.html
+
 game.c
