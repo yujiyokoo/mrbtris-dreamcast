@@ -2,6 +2,10 @@
 
 mrbtris-dreamcast is a simple game for Dreamcast, written in mruby as an example for the mruby-dreamcast project.
 
+== Demo
+
+This is the video of this game, when written to a CD-R disc: https://vimeo.com/335686570
+
 == Goals
 
 This project aims to provide a simple example of how to use and extend the mruby and KOS API on Dreamcast.
