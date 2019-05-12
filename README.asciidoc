@@ -12,7 +12,21 @@ Please get the mruby-dreamcast environment set up.
 
 == Build
 
-If everything is set up, `make` in the project directory should produce an elf binary.
+_Please refer to the mruby-dreamcast for setting up your environment!_
+
+If everything is set up as per README on mruby-dreamcast,
++
+----
+> cd /vagrant/src
+> git clone https://gitlab.com/yujiyokoo/mrbtris-dreamcast.git
+> cd mrbtris-dreamcast
+> . /opt/toolchains/dc/kos/environ.sh
+> make
+----
++
+should produce an elf binary (called `mrbtris.elf`).
+
+You will need to use Either a Dreamcast emulator or a real Dreamcast to run this produced binary.
 
 == Running
 
