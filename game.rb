@@ -14,11 +14,17 @@ class Block
     @score = 0
   end
 
+  LEFT_AND_RIGHT_BLOCKS =
+    [:white, false, false, false, false, false, false, false, false, false, false, :white]
+
   # note that board starts from -1 to allow easy comparison when block gets to the left all
   def empty_board
-    [ [:white, :white, :white, :white, :white, :white, :white, :white, :white, :white, :white, :white] ] +
-    [ [:white, false, false, false, false, false, false, false, false, false, false, :white] ] * 20 +
-    [ [:white, :white, :white, :white, :white, :white, :white, :white, :white, :white, :white, :white] ] +
+    horizontal_wall =
+      [:white, :white, :white, :white, :white, :white, :white, :white, :white, :white, :white, :white]
+
+    [ horizontal_wall ] +
+    [ LEFT_AND_RIGHT_BLOCKS ] * 20 +
+    [ horizontal_wall ] +
     [[], []] # extra 2 rows for when it gets to the bottom
   end
 
@@ -45,57 +51,77 @@ class Block
     }
     to_delete.each { |i|
       @board.delete_at(i)
-      @board.insert(1, [:white, false, false, false, false, false, false, false, false, false, false, :white])
+      @board.insert(1, LEFT_AND_RIGHT_BLOCKS)
     }
     scores = [0, 1, 2, 3, 8]
     @score += scores[to_delete.size]
   end
 
-  def random_shape
-    candidates = [
-      [ # square shape
-        [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
-        [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
-        [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
-        [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
-      ],
-      [ # I shape
-        [ [], [:cyan, :cyan, :cyan, :cyan], [], [] ],
-        [ [false, false, :cyan], [false, false, :cyan], [false, false, :cyan], [false, false, :cyan] ],
-        [ [], [], [:cyan, :cyan, :cyan, :cyan], [] ],
-        [ [false, :cyan], [false, :cyan], [false, :cyan], [false, :cyan] ]
-      ],
-      [ # L shape
-        [ [false, false, :orange], [:orange, :orange, :orange], [], [] ],
-        [ [false, :orange, false], [false, :orange, false], [false, :orange, :orange], [] ],
-        [ [false, false, false], [:orange, :orange, :orange], [:orange, false, false], [] ],
-        [ [:orange, :orange, false], [false, :orange, false], [false, :orange, false], [] ]
-      ],
-      [ # J shape
-        [ [:blue, false, false], [:blue, :blue, :blue], [], [] ],
-        [ [false, :blue, :blue], [false, :blue, false], [false, :blue, false], [] ],
-        [ [false, false, false], [:blue, :blue, :blue], [false, false, :blue], [] ],
-        [ [false, :blue, false], [false, :blue, false], [:blue, :blue, false], [] ]
-      ],
-      [ # S shape
-        [ [false, :green, :green], [:green, :green, false], [], [] ],
-        [ [false, :green, false], [false, :green, :green], [false, false, :green], [] ],
-        [ [false, false, false], [false, :green, :green], [:green, :green, false], [] ],
-        [ [:green, false, false], [:green, :green, false], [false, :green, false], [] ]
-      ],
-      [ # Z shape
-        [ [:red, :red, false], [false, :red, :red], [], [] ],
-        [ [false, false, :red], [false, :red, :red], [false, :red, false], [] ],
-        [ [false, false, false], [:red, :red, false], [false, :red, :red], [] ],
-        [ [false, :red, false], [:red, :red, false], [:red, false, false], [] ]
-      ],
-      [ # T shape
-        [ [false, :purple, false], [:purple, :purple, :purple], [], [] ],
-        [ [false, :purple, false], [false, :purple, :purple], [false, :purple, false], [] ],
-        [ [false, false, false], [:purple, :purple, :purple], [false, :purple, false], [] ],
-        [ [false, :purple, false], [:purple, :purple, false], [false, :purple, false], [] ]
-      ]
+  def square_shape
+    [
+      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
+      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
+      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
+      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
     ]
+  end
+
+  def i_shape
+    [
+      [ [], [:cyan, :cyan, :cyan, :cyan], [], [] ],
+      [ [false, false, :cyan], [false, false, :cyan], [false, false, :cyan], [false, false, :cyan] ],
+      [ [], [], [:cyan, :cyan, :cyan, :cyan], [] ],
+      [ [false, :cyan], [false, :cyan], [false, :cyan], [false, :cyan] ]
+    ]
+  end
+
+  def l_shape
+    [ 
+      [ [false, false, :orange], [:orange, :orange, :orange], [], [] ],
+      [ [false, :orange, false], [false, :orange, false], [false, :orange, :orange], [] ],
+      [ [false, false, false], [:orange, :orange, :orange], [:orange, false, false], [] ],
+      [ [:orange, :orange, false], [false, :orange, false], [false, :orange, false], [] ]
+    ]
+  end
+
+  def j_shape
+    [
+      [ [:blue, false, false], [:blue, :blue, :blue], [], [] ],
+      [ [false, :blue, :blue], [false, :blue, false], [false, :blue, false], [] ],
+      [ [false, false, false], [:blue, :blue, :blue], [false, false, :blue], [] ],
+      [ [false, :blue, false], [false, :blue, false], [:blue, :blue, false], [] ]
+    ]
+  end
+
+  def s_shape
+    [
+      [ [false, :green, :green], [:green, :green, false], [], [] ],
+      [ [false, :green, false], [false, :green, :green], [false, false, :green], [] ],
+      [ [false, false, false], [false, :green, :green], [:green, :green, false], [] ],
+      [ [:green, false, false], [:green, :green, false], [false, :green, false], [] ]
+    ]
+  end
+
+  def z_shape
+    [
+      [ [:red, :red, false], [false, :red, :red], [], [] ],
+      [ [false, false, :red], [false, :red, :red], [false, :red, false], [] ],
+      [ [false, false, false], [:red, :red, false], [false, :red, :red], [] ],
+      [ [false, :red, false], [:red, :red, false], [:red, false, false], [] ]
+    ]
+  end
+
+  def t_shape
+    [
+      [ [false, :purple, false], [:purple, :purple, :purple], [], [] ],
+      [ [false, :purple, false], [false, :purple, :purple], [false, :purple, false], [] ],
+      [ [false, false, false], [:purple, :purple, :purple], [false, :purple, false], [] ],
+      [ [false, :purple, false], [:purple, :purple, false], [false, :purple, false], [] ]
+    ]
+  end
+
+  def random_shape
+    candidates = [square_shape, i_shape, l_shape, j_shape, s_shape, z_shape, t_shape]
 
     candidates[rand(candidates.size)]
   end
