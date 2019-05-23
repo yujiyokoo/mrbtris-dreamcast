@@ -16,9 +16,9 @@ class Block
 
   # note that board starts from -1 to allow easy comparison when block gets to the left all
   def empty_board
-    [ [true, true, true, true, true, true, true, true, true, true, true, true] ] +
-    [ [true, false, false, false, false, false, false, false, false, false, false, true] ] * 20 +
-    [ [true, true, true, true, true, true, true, true, true, true, true, true] ] +
+    [ [:white, :white, :white, :white, :white, :white, :white, :white, :white, :white, :white, :white] ] +
+    [ [:white, false, false, false, false, false, false, false, false, false, false, :white] ] * 20 +
+    [ [:white, :white, :white, :white, :white, :white, :white, :white, :white, :white, :white, :white] ] +
     [[], []] # extra 2 rows for when it gets to the bottom
   end
 
@@ -45,7 +45,7 @@ class Block
     }
     to_delete.each { |i|
       @board.delete_at(i)
-      @board.insert(1, [true, false, false, false, false, false, false, false, false, false, false, true])
+      @board.insert(1, [:white, false, false, false, false, false, false, false, false, false, false, :white])
     }
     scores = [0, 1, 2, 3, 8]
     @score += scores[to_delete.size]
@@ -54,46 +54,46 @@ class Block
   def random_shape
     candidates = [
       [ # square shape
-        [ [false, true, true], [false, true, true], [], [] ],
-        [ [false, true, true], [false, true, true], [], [] ],
-        [ [false, true, true], [false, true, true], [], [] ],
-        [ [false, true, true], [false, true, true], [], [] ],
+        [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
+        [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
+        [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
+        [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
       ],
       [ # I shape
-        [ [], [true, true, true, true], [], [] ],
-        [ [false, false, true], [false, false, true], [false, false, true], [false, false, true] ],
-        [ [], [], [true, true, true, true], [] ],
-        [ [false, true], [false, true], [false, true], [false, true] ]
+        [ [], [:cyan, :cyan, :cyan, :cyan], [], [] ],
+        [ [false, false, :cyan], [false, false, :cyan], [false, false, :cyan], [false, false, :cyan] ],
+        [ [], [], [:cyan, :cyan, :cyan, :cyan], [] ],
+        [ [false, :cyan], [false, :cyan], [false, :cyan], [false, :cyan] ]
       ],
       [ # L shape
-        [ [false, false, true], [true, true, true], [], [] ],
-        [ [false, true, false], [false, true, false], [false, true, true], [] ],
-        [ [false, false, false], [true, true, true], [true, false, false], [] ],
-        [ [true, true, false], [false, true, false], [false, true, false], [] ]
+        [ [false, false, :orange], [:orange, :orange, :orange], [], [] ],
+        [ [false, :orange, false], [false, :orange, false], [false, :orange, :orange], [] ],
+        [ [false, false, false], [:orange, :orange, :orange], [:orange, false, false], [] ],
+        [ [:orange, :orange, false], [false, :orange, false], [false, :orange, false], [] ]
       ],
       [ # J shape
-        [ [true, false, false], [true, true, true], [], [] ],
-        [ [false, true, true], [false, true, false], [false, true, false], [] ],
-        [ [false, false, false], [true, true, true], [false, false, true], [] ],
-        [ [false, true, false], [false, true, false], [true, true, false], [] ]
+        [ [:blue, false, false], [:blue, :blue, :blue], [], [] ],
+        [ [false, :blue, :blue], [false, :blue, false], [false, :blue, false], [] ],
+        [ [false, false, false], [:blue, :blue, :blue], [false, false, :blue], [] ],
+        [ [false, :blue, false], [false, :blue, false], [:blue, :blue, false], [] ]
       ],
       [ # S shape
-        [ [false, true, true], [true, true, false], [], [] ],
-        [ [false, true, false], [false, true, true], [false, false, true], [] ],
-        [ [false, false, false], [false, true, true], [true, true, false], [] ],
-        [ [true, false, false], [true, true, false], [false, true, false], [] ]
+        [ [false, :green, :green], [:green, :green, false], [], [] ],
+        [ [false, :green, false], [false, :green, :green], [false, false, :green], [] ],
+        [ [false, false, false], [false, :green, :green], [:green, :green, false], [] ],
+        [ [:green, false, false], [:green, :green, false], [false, :green, false], [] ]
       ],
       [ # Z shape
-        [ [true, true, false], [false, true, true], [], [] ],
-        [ [false, false, true], [false, true, true], [false, true, false], [] ],
-        [ [false, false, false], [true, true, false], [false, true, true], [] ],
-        [ [false, true, false], [true, true, false], [true, false, false], [] ]
+        [ [:red, :red, false], [false, :red, :red], [], [] ],
+        [ [false, false, :red], [false, :red, :red], [false, :red, false], [] ],
+        [ [false, false, false], [:red, :red, false], [false, :red, :red], [] ],
+        [ [false, :red, false], [:red, :red, false], [:red, false, false], [] ]
       ],
       [ # T shape
-        [ [false, true, false], [true, true, true], [], [] ],
-        [ [false, true, false], [false, true, true], [false, true, false], [] ],
-        [ [false, false, false], [true, true, true], [false, true, false], [] ],
-        [ [false, true, false], [true, true, false], [false, true, false], [] ]
+        [ [false, :purple, false], [:purple, :purple, :purple], [], [] ],
+        [ [false, :purple, false], [false, :purple, :purple], [false, :purple, false], [] ],
+        [ [false, false, false], [:purple, :purple, :purple], [false, :purple, false], [] ],
+        [ [false, :purple, false], [:purple, :purple, false], [false, :purple, false], [] ]
       ]
     ]
 
@@ -105,7 +105,7 @@ class Block
       erase_last_pos
       @shape[@shape_orientation].each_with_index { |row, rownum|
         row.each_with_index { |cell, colnum|
-          Screen.draw_white_square(@x+colnum, @y+rownum) if cell
+          Screen.draw_colour_square(@x+colnum, @y+rownum, cell, false) if cell
         }
       }
     end
@@ -114,7 +114,7 @@ class Block
   def save_to_board
     @shape[@shape_orientation].each_with_index { |row, rownum|
       row.each_with_index { |cell, colnum|
-        @board[@y+rownum][@x+colnum] = true if cell
+        @board[@y+rownum][@x+colnum] = cell if cell
       }
     }
   end
@@ -264,7 +264,7 @@ class Block
     normalised_next_shape.each_with_index { |row, rownum|
       row.each_with_index { |cell, colnum|
         if cell
-          Screen.draw_square(colnum + 14, rownum + 2, 255, 255, 255, true)
+          Screen.draw_colour_square(colnum + 14, rownum + 2, cell, true)
         else
           Screen.draw_square(colnum + 14, rownum + 2, 0, 0, 0, true)
         end
@@ -287,8 +287,35 @@ module Screen
     end
   end
 
+  def self.name_to_rgb(colour)
+    case colour
+    when :white
+      [255, 255, 255]
+    when :cyan
+      [0, 255, 255]
+    when :yellow
+      [255, 255, 0]
+    when :purple
+      [128, 0, 128]
+    when :green
+      [0, 128, 0]
+    when :red
+      [255, 0, 0]
+    when :blue
+      [0, 0, 255]
+    when :orange
+      [255, 165, 0]
+    else
+      [0, 0, 0]
+    end
+  end
+
+  def self.draw_colour_square(x, y, colour, ignore_boundary)
+    draw_square(x, y, *(name_to_rgb colour), ignore_boundary)
+  end
+
   def self.draw_white_square(x, y, ignore_boundary = false)
-    draw_square(x, y, 255, 255, 255, ignore_boundary)
+    draw_colour_square(x, y, :white, ignore_boundary)
   end
 
   def self.draw_black_square(x, y, ignore_boundary = false)
@@ -299,7 +326,7 @@ module Screen
     board.each_with_index { |row, y|
       row.each_with_index { |cell, x|
         if cell
-          draw_white_square(x, y, true)
+          draw_colour_square(x, y, cell, true)
         else
           draw_black_square(x, y, true)
         end
@@ -317,7 +344,7 @@ module TestGame
     Dc2d::clear_score(@score)
 
     while true do
-      Screen.draw_board(([].push [true] * 12) * 22)
+      Screen.draw_board(([].push [:white] * 12) * 22)
       while !running do
         rand(1) # hopefully this would give us a "more random" start point
         button_state = Dc2d::get_button_state
