@@ -137,49 +137,6 @@ static mrb_value render_score(mrb_state *mrb, mrb_value self) {
   return mrb_nil_value();
 }
 
-static void main_loop(int initx, int inity) {
-  int x = initx;
-  int y = inity;
-  int last_x = 0;
-  int last_y = 0;
-  maple_device_t *cont1;
-  cont_state_t *state;
-
-  for(;;) {
-    vid_waitvbl();
-
-    if(last_x != x || last_y != y) {
-      int i = 0;
-      int j = 0;
-      for(i = 0; i < 10 ; i++) {
-        for(j = 0; j < 10; j++)
-          vram_s[(last_x + i) + ((last_y+j) * 640)] = PACK_PIXEL(0, 0, 0);
-      }
-      for(i = 0; i < 10 ; i++) {
-        for(j = 0; j < 10; j++)
-          vram_s[(x+i) + ((y+j) * 640)] = PACK_PIXEL(255, 255, 255);
-      }
-    }
-
-    if((cont1 = maple_enum_type(0, MAPLE_FUNC_CONTROLLER))) {
-      if((state = (cont_state_t *)maple_dev_status(cont1))) {
-        last_x = x;
-        last_y = y;
-        if(state->buttons & CONT_START)
-          return;
-        if(state->buttons & CONT_DPAD_LEFT)
-          x -= 5;
-        if(state->buttons & CONT_DPAD_RIGHT)
-          x += 5;
-        if(state->buttons & CONT_DPAD_UP)
-          y -= 5;
-        if(state->buttons & CONT_DPAD_DOWN)
-          y += 5;
-      }
-    }
-  }
-}
-
 void print_exception(mrb_state* mrb) {
     if(mrb->exc) {
       mrb_value backtrace = mrb_get_backtrace(mrb);
