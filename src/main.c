@@ -1,9 +1,7 @@
 #include <kos.h>
 #include <mruby.h>
 #include <mruby/irep.h>
-
-/* You can safely remove this line if you don't use a ROMDISK */
-extern uint8 romdisk[];
+#include "mrbtris.h"
 
 /* These macros tell KOS how to initialize itself. All of this initialization
    happens before main() gets called, and the shutdown happens afterwards. So
@@ -19,6 +17,8 @@ extern uint8 romdisk[];
    the current KOS defaults, use INIT_DEFAULT (or leave it out entirely). */
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
 
+/* You can safely remove this line if you don't use a ROMDISK */
+extern uint8 romdisk[];
 /* And specify a romdisk, if you want one (or leave it out) */
 KOS_INIT_ROMDISK(romdisk);
 
@@ -26,8 +26,6 @@ extern const uint8_t game[]; // declared in the rb file
 
 int main(int argc, char **argv) {
     vid_set_mode(DM_640x480_PAL_IL, PM_RGB565); // or DM_768x576_PAL_IL ?
-
-    define_module_functions();
 
     mrb_state *mrb = mrb_open();
     if (!mrb) { return 1; }
