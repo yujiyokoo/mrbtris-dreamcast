@@ -4,6 +4,7 @@
 #include <mruby/string.h>
 #include <mruby/error.h>
 #include <stdio.h>
+#include <inttypes.h>
 
 #define PACK_PIXEL(r, g, b) ( ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)  )
 
@@ -108,7 +109,7 @@ static mrb_value render_score(mrb_state *mrb, mrb_value self) {
   struct mrb_value score;
   mrb_get_args(mrb, "i", &score);
   char buf[20];
-  snprintf(buf, 20, "Score: %8d", mrb_fixnum(score));
+  snprintf(buf, 20, "Score: %8" PRId32, mrb_fixnum(score));
   bfont_draw_str(vram_s + 640 * 100 + 16, 640, 1, buf);
 
   return mrb_nil_value();
