@@ -76,7 +76,7 @@ class Block
   end
 
   def l_shape
-    [ 
+    [
       [ [false, false, :orange], [:orange, :orange, :orange], [], [] ],
       [ [false, :orange, false], [false, :orange, false], [false, :orange, :orange], [] ],
       [ [false, false, false], [:orange, :orange, :orange], [:orange, false, false], [] ],
