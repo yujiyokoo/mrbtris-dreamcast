@@ -1,34 +1,11 @@
 #include <kos.h>
 #include <mruby.h>
-#include <mruby/irep.h>
 #include <mruby/data.h>
 #include <mruby/string.h>
 #include <mruby/error.h>
 #include <stdio.h>
 
 #define PACK_PIXEL(r, g, b) ( ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)  )
-
-extern const uint8_t game[]; // declared in the rb file
-
-/* You can safely remove this line if you don't use a ROMDISK */
-extern uint8 romdisk[];
-
-/* These macros tell KOS how to initialize itself. All of this initialization
-   happens before main() gets called, and the shutdown happens afterwards. So
-   you need to set any flags you want here. Here are some possibilities:
-
-   INIT_NONE        -- don't do any auto init
-   INIT_IRQ     -- knable IRQs
-   INIT_THD_PREEMPT -- Enable pre-emptive threading
-   INIT_NET     -- Enable networking (doesn't imply lwIP!)
-   INIT_MALLOCSTATS -- Enable a call to malloc_stats() right before shutdown
-
-   You can OR any or all of those together. If you want to start out with
-   the current KOS defaults, use INIT_DEFAULT (or leave it out entirely). */
-KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
-
-/* And specify a romdisk, if you want one (or leave it out) */
-KOS_INIT_ROMDISK(romdisk);
 
 mrb_value put_pixel640(mrb_state *mrb, mrb_value self) {
   mrb_int x, y, r, g, b;
@@ -148,41 +125,22 @@ void print_exception(mrb_state* mrb) {
     }
 }
 
-int main(int argc, char **argv) {
-    vid_set_mode(DM_640x480_PAL_IL, PM_RGB565); // or DM_768x576_PAL_IL ?
+void define_module_functions(mrb_state* mrb, struct RClass* module) {
+    mrb_define_module_function(mrb, module, "put_pixel640", put_pixel640, MRB_ARGS_REQ(5));
+    mrb_define_module_function(mrb, module, "draw20x20_640", draw20x20_640, MRB_ARGS_REQ(5));
+    mrb_define_module_function(mrb, module, "waitvbl", waitvbl, MRB_ARGS_NONE());
 
-    // bfont_draw_str(vram_s + 640 * 20 + 16, 640, 1, "START+A+B to exit");
+    mrb_define_module_function(mrb, module, "clear_score", clear_score, MRB_ARGS_NONE());
 
-    mrb_state *mrb = mrb_open();
-    struct RClass *dc2d_module = mrb_define_module(mrb, "Dc2d");
+    mrb_define_module_function(mrb, module, "render_score", render_score, MRB_ARGS_REQ(1));
 
-    mrb_define_module_function(mrb, dc2d_module, "put_pixel640", put_pixel640, MRB_ARGS_REQ(5));
-    mrb_define_module_function(mrb, dc2d_module, "draw20x20_640", draw20x20_640, MRB_ARGS_REQ(5));
-    mrb_define_module_function(mrb, dc2d_module, "waitvbl", waitvbl, MRB_ARGS_NONE());
+    mrb_define_module_function(mrb, module, "get_button_state", get_button_state, MRB_ARGS_NONE());
 
-    mrb_define_module_function(mrb, dc2d_module, "clear_score", clear_score, MRB_ARGS_NONE());
-
-    mrb_define_module_function(mrb, dc2d_module, "render_score", render_score, MRB_ARGS_REQ(1));
-
-    mrb_define_module_function(mrb, dc2d_module, "get_button_state", get_button_state, MRB_ARGS_NONE());
-
-    mrb_define_module_function(mrb, dc2d_module, "start_btn?", start_btn, MRB_ARGS_REQ(1));
-    mrb_define_module_function(mrb, dc2d_module, "dpad_left?", dpad_left, MRB_ARGS_REQ(1));
-    mrb_define_module_function(mrb, dc2d_module, "dpad_right?", dpad_right, MRB_ARGS_REQ(1));
-    mrb_define_module_function(mrb, dc2d_module, "dpad_up?", dpad_up, MRB_ARGS_REQ(1));
-    mrb_define_module_function(mrb, dc2d_module, "dpad_down?", dpad_down, MRB_ARGS_REQ(1));
-    mrb_define_module_function(mrb, dc2d_module, "btn_a?", btn_a, MRB_ARGS_REQ(1));
-    mrb_define_module_function(mrb, dc2d_module, "btn_b?", btn_b, MRB_ARGS_REQ(1));
-
-    if (!mrb) { return 1; }
-
-    mrb_load_irep(mrb, game);
-
-    print_exception(mrb);
-
-    mrb_close(mrb);
-
-    return 0;
+    mrb_define_module_function(mrb, module, "start_btn?", start_btn, MRB_ARGS_REQ(1));
+    mrb_define_module_function(mrb, module, "dpad_left?", dpad_left, MRB_ARGS_REQ(1));
+    mrb_define_module_function(mrb, module, "dpad_right?", dpad_right, MRB_ARGS_REQ(1));
+    mrb_define_module_function(mrb, module, "dpad_up?", dpad_up, MRB_ARGS_REQ(1));
+    mrb_define_module_function(mrb, module, "dpad_down?", dpad_down, MRB_ARGS_REQ(1));
+    mrb_define_module_function(mrb, module, "btn_a?", btn_a, MRB_ARGS_REQ(1));
+    mrb_define_module_function(mrb, module, "btn_b?", btn_b, MRB_ARGS_REQ(1));
 }
-
-

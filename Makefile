@@ -1,6 +1,6 @@
 TARGET = mrbtris.elf
 
-OBJS = src/mrbtris.o src/game.o romdisk.o
+OBJS = src/mrbtris.o src/game.o src/main.o romdisk.o
 
 MRB_BYTECODE = src/game.c
 
