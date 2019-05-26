@@ -1,4 +1,4 @@
-class Block
+class GameState
   attr_accessor :x, :y
 
   attr_reader :board, :shape, :shape_orientation
@@ -361,7 +361,7 @@ module Screen
   end
 end
 
-module TestGame
+module MainGame
   FPS = 50
 
   def self.main_loop
@@ -386,7 +386,7 @@ module TestGame
       last_button_state = 0
       button_state_unchanged_for = 0
 
-      moving_block = Block.new(3, 3, 4, 1)
+      moving_block = GameState.new(3, 3, 4, 1)
       Screen.draw_board(moving_block.board)
       moving_block.render_next_block
       moving_block.render_score
@@ -457,7 +457,7 @@ end
 
 begin
   puts 'Starting the game.'
-  TestGame.main_loop
+  MainGame.main_loop
 rescue => ex
   # TODO: backtrace seems empty... figure out why
   p ex.backtrace
