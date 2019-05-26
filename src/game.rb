@@ -454,13 +454,3 @@ module MainGame
     end
   end
 end
-
-begin
-  puts 'Starting the game.'
-  MainGame.main_loop
-rescue => ex
-  # TODO: backtrace seems empty... figure out why
-  p ex.backtrace
-  p ex.inspect
-  raise ex
-end

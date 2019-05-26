@@ -3,6 +3,7 @@
 *.o
 *.elf
 romdisk.*
+test_bin
 
 README.html
 
