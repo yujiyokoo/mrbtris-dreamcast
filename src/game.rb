@@ -15,12 +15,12 @@ class GameState
   end
 
   LEFT_AND_RIGHT_BLOCKS =
-    [:white, false, false, false, false, false, false, false, false, false, false, :white]
+    [:grey, false, false, false, false, false, false, false, false, false, false, :grey]
 
   # note that board starts from -1 to allow easy comparison when block gets to the left all
   def empty_board
     horizontal_wall =
-      [:white, :white, :white, :white, :white, :white, :white, :white, :white, :white, :white, :white]
+      [:grey, :grey, :grey, :grey, :grey, :grey, :grey, :grey, :grey, :grey, :grey, :grey]
 
     [ horizontal_wall ] +
     [ LEFT_AND_RIGHT_BLOCKS ] * 20 +
@@ -315,12 +315,12 @@ module Screen
 
   def self.name_to_rgb(colour)
     case colour
-    when :white
-      [255, 255, 255]
+    when :grey
+      [192, 192, 192]
     when :cyan
-      [0, 255, 255]
+      [0, 192, 192]
     when :yellow
-      [255, 255, 0]
+      [192, 192, 0]
     when :purple
       [128, 0, 128]
     when :green
@@ -338,10 +338,6 @@ module Screen
 
   def self.draw_colour_square(x, y, colour, ignore_boundary)
     draw_square(x, y, *(name_to_rgb colour), ignore_boundary)
-  end
-
-  def self.draw_white_square(x, y, ignore_boundary = false)
-    draw_colour_square(x, y, :white, ignore_boundary)
   end
 
   def self.draw_black_square(x, y, ignore_boundary = false)
@@ -370,7 +366,7 @@ module MainGame
     Dc2d::clear_score(@score)
 
     while true do
-      Screen.draw_board(([].push [:white] * 12) * 22)
+      Screen.draw_board(([].push [:grey] * 12) * 22)
       while !running do
         rand(1) # hopefully this would give us a "more random" start point
         button_state = Dc2d::get_button_state
