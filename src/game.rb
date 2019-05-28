@@ -1,10 +1,98 @@
+class BlockShapes
+  def self.square_shape
+    [
+      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
+      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
+      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
+      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
+    ]
+  end
+
+  def self.i_shape
+    [
+      [ [], [:cyan, :cyan, :cyan, :cyan], [], [] ],
+      [ [false, false, :cyan], [false, false, :cyan], [false, false, :cyan], [false, false, :cyan] ],
+      [ [], [], [:cyan, :cyan, :cyan, :cyan], [] ],
+      [ [false, :cyan], [false, :cyan], [false, :cyan], [false, :cyan] ]
+    ]
+  end
+
+  def self.l_shape
+    [
+      [ [false, false, :orange], [:orange, :orange, :orange], [], [] ],
+      [ [false, :orange, false], [false, :orange, false], [false, :orange, :orange], [] ],
+      [ [false, false, false], [:orange, :orange, :orange], [:orange, false, false], [] ],
+      [ [:orange, :orange, false], [false, :orange, false], [false, :orange, false], [] ]
+    ]
+  end
+
+  def self.j_shape
+    [
+      [ [:blue, false, false], [:blue, :blue, :blue], [], [] ],
+      [ [false, :blue, :blue], [false, :blue, false], [false, :blue, false], [] ],
+      [ [false, false, false], [:blue, :blue, :blue], [false, false, :blue], [] ],
+      [ [false, :blue, false], [false, :blue, false], [:blue, :blue, false], [] ]
+    ]
+  end
+
+  def self.s_shape
+    [
+      [ [false, :green, :green], [:green, :green, false], [], [] ],
+      [ [false, :green, false], [false, :green, :green], [false, false, :green], [] ],
+      [ [false, false, false], [false, :green, :green], [:green, :green, false], [] ],
+      [ [:green, false, false], [:green, :green, false], [false, :green, false], [] ]
+    ]
+  end
+
+  def self.z_shape
+    [
+      [ [:red, :red, false], [false, :red, :red], [], [] ],
+      [ [false, false, :red], [false, :red, :red], [false, :red, false], [] ],
+      [ [false, false, false], [:red, :red, false], [false, :red, :red], [] ],
+      [ [false, :red, false], [:red, :red, false], [:red, false, false], [] ]
+    ]
+  end
+
+  def self.t_shape
+    [
+      [ [false, :purple, false], [:purple, :purple, :purple], [], [] ],
+      [ [false, :purple, false], [false, :purple, :purple], [false, :purple, false], [] ],
+      [ [false, false, false], [:purple, :purple, :purple], [false, :purple, false], [] ],
+      [ [false, :purple, false], [:purple, :purple, false], [false, :purple, false], [] ]
+    ]
+  end
+
+  def self.name_to_rgb(colour)
+    case colour
+    when :grey
+      [192, 192, 192]
+    when :cyan
+      [0, 192, 192]
+    when :yellow
+      [192, 192, 0]
+    when :purple
+      [128, 0, 128]
+    when :green
+      [0, 128, 0]
+    when :red
+      [255, 0, 0]
+    when :blue
+      [0, 0, 255]
+    when :orange
+      [255, 165, 0]
+    else
+      [0, 0, 0]
+    end
+  end
+end
+
 class GameState
   attr_accessor :x, :y
 
   attr_reader :board, :shape, :shape_orientation
 
-  def initialize(width, height, x, y)
-    @width, @height = width, height
+
+  def initialize(x, y)
     @x, @y = x, y
     @last_x, @last_y = 0, 0
     @board = copy_board(empty_board)
@@ -57,71 +145,8 @@ class GameState
     @score += scores[to_delete.size]
   end
 
-  def square_shape
-    [
-      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
-      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
-      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
-      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
-    ]
-  end
-
-  def i_shape
-    [
-      [ [], [:cyan, :cyan, :cyan, :cyan], [], [] ],
-      [ [false, false, :cyan], [false, false, :cyan], [false, false, :cyan], [false, false, :cyan] ],
-      [ [], [], [:cyan, :cyan, :cyan, :cyan], [] ],
-      [ [false, :cyan], [false, :cyan], [false, :cyan], [false, :cyan] ]
-    ]
-  end
-
-  def l_shape
-    [
-      [ [false, false, :orange], [:orange, :orange, :orange], [], [] ],
-      [ [false, :orange, false], [false, :orange, false], [false, :orange, :orange], [] ],
-      [ [false, false, false], [:orange, :orange, :orange], [:orange, false, false], [] ],
-      [ [:orange, :orange, false], [false, :orange, false], [false, :orange, false], [] ]
-    ]
-  end
-
-  def j_shape
-    [
-      [ [:blue, false, false], [:blue, :blue, :blue], [], [] ],
-      [ [false, :blue, :blue], [false, :blue, false], [false, :blue, false], [] ],
-      [ [false, false, false], [:blue, :blue, :blue], [false, false, :blue], [] ],
-      [ [false, :blue, false], [false, :blue, false], [:blue, :blue, false], [] ]
-    ]
-  end
-
-  def s_shape
-    [
-      [ [false, :green, :green], [:green, :green, false], [], [] ],
-      [ [false, :green, false], [false, :green, :green], [false, false, :green], [] ],
-      [ [false, false, false], [false, :green, :green], [:green, :green, false], [] ],
-      [ [:green, false, false], [:green, :green, false], [false, :green, false], [] ]
-    ]
-  end
-
-  def z_shape
-    [
-      [ [:red, :red, false], [false, :red, :red], [], [] ],
-      [ [false, false, :red], [false, :red, :red], [false, :red, false], [] ],
-      [ [false, false, false], [:red, :red, false], [false, :red, :red], [] ],
-      [ [false, :red, false], [:red, :red, false], [:red, false, false], [] ]
-    ]
-  end
-
-  def t_shape
-    [
-      [ [false, :purple, false], [:purple, :purple, :purple], [], [] ],
-      [ [false, :purple, false], [false, :purple, :purple], [false, :purple, false], [] ],
-      [ [false, false, false], [:purple, :purple, :purple], [false, :purple, false], [] ],
-      [ [false, :purple, false], [:purple, :purple, false], [false, :purple, false], [] ]
-    ]
-  end
-
   def random_shape
-    candidates = [square_shape, i_shape, l_shape, j_shape, s_shape, z_shape, t_shape]
+    candidates = [BlockShapes.square_shape, BlockShapes.i_shape, BlockShapes.l_shape, BlockShapes.j_shape, BlockShapes.s_shape, BlockShapes.z_shape, BlockShapes.t_shape]
 
     candidates[rand(candidates.size)]
   end
@@ -313,31 +338,9 @@ module Screen
     end
   end
 
-  def self.name_to_rgb(colour)
-    case colour
-    when :grey
-      [192, 192, 192]
-    when :cyan
-      [0, 192, 192]
-    when :yellow
-      [192, 192, 0]
-    when :purple
-      [128, 0, 128]
-    when :green
-      [0, 128, 0]
-    when :red
-      [255, 0, 0]
-    when :blue
-      [0, 0, 255]
-    when :orange
-      [255, 165, 0]
-    else
-      [0, 0, 0]
-    end
-  end
 
   def self.draw_colour_square(x, y, colour, ignore_boundary)
-    draw_square(x, y, *(name_to_rgb colour), ignore_boundary)
+    draw_square(x, y, *(BlockShapes.name_to_rgb colour), ignore_boundary)
   end
 
   def self.draw_black_square(x, y, ignore_boundary = false)
@@ -382,7 +385,7 @@ module MainGame
       last_button_state = 0
       button_state_unchanged_for = 0
 
-      moving_block = GameState.new(3, 3, 4, 1)
+      moving_block = GameState.new(4, 1)
       Screen.draw_board(moving_block.board)
       moving_block.render_next_block
       moving_block.render_score
