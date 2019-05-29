@@ -3,7 +3,6 @@ class GameState
 
   attr_reader :board, :shape, :shape_orientation
 
-
   def initialize(x, y)
     @x, @y = x, y
     @last_x, @last_y = 0, 0

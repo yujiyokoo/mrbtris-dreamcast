@@ -40,13 +40,17 @@ class BlockShapesTests < MTest::Unit::TestCase
   end
 
   def test_cannot_modify_shapes
-    square = BlockShapes::SQ[0]
+    square = BlockShapes::L[0]
     assert_raise(FrozenError) do
-      square[0][0] = :cyan
+      square[0][0] = :unknown
     end
     assert_raise(FrozenError) do
       square[0] = []
     end
+  end
+
+  def test_color_to_rgb
+    assert(BlockShapes.colour_to_rgb(:red) == [255, 0, 0])
   end
 end
 
