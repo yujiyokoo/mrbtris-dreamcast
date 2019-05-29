@@ -2,6 +2,8 @@ TARGET = mrbtris.elf
 
 OBJS = src/mrbtris.o src/main.o src/game.o romdisk.o
 
+MRB_SOURCES=src/game.rb src/start_game.rb src/block_shapes.rb
+
 MRB_BYTECODE = src/game.c
 
 KOS_ROMDISK_DIR = romdisk
@@ -22,7 +24,7 @@ $(TARGET): $(OBJS) $(MRB_BYTECODE)
 	kos-cc $(CFLAGS) -o $(TARGET) $(OBJS) -lmruby -lmruby_core -lm
 
 $(MRB_BYTECODE): src/start_game.rb src/game.rb
-	/vagrant/src/mruby-host/bin/mrbc -g -Bgame -o src/game.c src/game.rb src/start_game.rb 
+	/vagrant/src/mruby-host/bin/mrbc -g -Bgame -o src/game.c $(MRB_SOURCES)
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
