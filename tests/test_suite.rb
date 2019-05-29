@@ -36,11 +36,11 @@ end
 
 class BlockShapesTests < MTest::Unit::TestCase
   def test_square_shape
-    assert(BlockShapes.square_shape[0] == [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ])
+    assert(BlockShapes::SQ[0] == [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ])
   end
 
   def test_cannot_modify_shapes
-    square = BlockShapes.square_shape[0] 
+    square = BlockShapes::SQ[0]
     assert_raise(FrozenError) do
       square[0][0] = :cyan
     end

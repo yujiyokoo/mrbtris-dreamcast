@@ -3,68 +3,54 @@ class BlockShapes
     x.map { |shape| shape.map { |row| row.freeze } ; shape.freeze }
   end
 
-  def self.square_shape
-    [
+  SQ = freeze_3_levels [
       [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
       [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
       [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
       [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
     ]
-  end
 
-  def self.i_shape
-    [
+  I = freeze_3_levels [
       [ [], [:cyan, :cyan, :cyan, :cyan], [], [] ],
       [ [false, false, :cyan], [false, false, :cyan], [false, false, :cyan], [false, false, :cyan] ],
       [ [], [], [:cyan, :cyan, :cyan, :cyan], [] ],
       [ [false, :cyan], [false, :cyan], [false, :cyan], [false, :cyan] ]
     ]
-  end
 
-  def self.l_shape
-    [
+  L = freeze_3_levels  [
       [ [false, false, :orange], [:orange, :orange, :orange], [], [] ],
       [ [false, :orange, false], [false, :orange, false], [false, :orange, :orange], [] ],
       [ [false, false, false], [:orange, :orange, :orange], [:orange, false, false], [] ],
       [ [:orange, :orange, false], [false, :orange, false], [false, :orange, false], [] ]
     ]
-  end
 
-  def self.j_shape
-    [
+  J = freeze_3_levels [
       [ [:blue, false, false], [:blue, :blue, :blue], [], [] ],
       [ [false, :blue, :blue], [false, :blue, false], [false, :blue, false], [] ],
       [ [false, false, false], [:blue, :blue, :blue], [false, false, :blue], [] ],
       [ [false, :blue, false], [false, :blue, false], [:blue, :blue, false], [] ]
     ]
-  end
 
-  def self.s_shape
-    [
+  S = freeze_3_levels [
       [ [false, :green, :green], [:green, :green, false], [], [] ],
       [ [false, :green, false], [false, :green, :green], [false, false, :green], [] ],
       [ [false, false, false], [false, :green, :green], [:green, :green, false], [] ],
       [ [:green, false, false], [:green, :green, false], [false, :green, false], [] ]
     ]
-  end
 
-  def self.z_shape
-    [
+  Z = freeze_3_levels [
       [ [:red, :red, false], [false, :red, :red], [], [] ],
       [ [false, false, :red], [false, :red, :red], [false, :red, false], [] ],
       [ [false, false, false], [:red, :red, false], [false, :red, :red], [] ],
       [ [false, :red, false], [:red, :red, false], [:red, false, false], [] ]
     ]
-  end
 
-  def self.t_shape
-    [
+  T = freeze_3_levels [
       [ [false, :purple, false], [:purple, :purple, :purple], [], [] ],
       [ [false, :purple, false], [false, :purple, :purple], [false, :purple, false], [] ],
       [ [false, false, false], [:purple, :purple, :purple], [false, :purple, false], [] ],
       [ [false, :purple, false], [:purple, :purple, false], [false, :purple, false], [] ]
     ]
-  end
 
   def self.colour_to_rgb(colour)
     case colour
@@ -90,7 +76,7 @@ class BlockShapes
   end
 
   def self.random_shape
-    candidates = [square_shape, i_shape, l_shape, j_shape, s_shape, z_shape, t_shape]
+    candidates = [SQ, I, L, J, S, Z, T]
 
     candidates[rand(candidates.size)]
   end
