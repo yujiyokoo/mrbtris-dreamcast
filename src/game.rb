@@ -8,8 +8,8 @@ class GameState
     @x, @y = x, y
     @last_x, @last_y = 0, 0
     @board = copy_board(empty_board)
-    @next_shape = random_shape
-    @shape = random_shape
+    @next_shape = BlockShapes.random_shape
+    @shape = BlockShapes.random_shape
     @shape_orientation, @last_shape_orientation = 0, 0
     @score = 0
   end
@@ -55,12 +55,6 @@ class GameState
     }
     scores = [0, 1, 2, 3, 8]
     @score += scores[to_delete.size]
-  end
-
-  def random_shape
-    candidates = [BlockShapes.square_shape, BlockShapes.i_shape, BlockShapes.l_shape, BlockShapes.j_shape, BlockShapes.s_shape, BlockShapes.z_shape, BlockShapes.t_shape]
-
-    candidates[rand(candidates.size)]
   end
 
   def render_if_moved
@@ -214,7 +208,7 @@ class GameState
     @x, @y = x, y
     @last_x, @last_y = 0, 0
     @shape = @next_shape
-    @next_shape = random_shape
+    @next_shape = BlockShapes.random_shape
     @shape_orientation = 0
   end
 
@@ -252,7 +246,7 @@ module Screen
 
 
   def self.draw_colour_square(x, y, colour, ignore_boundary)
-    draw_square(x, y, *(BlockShapes.name_to_rgb colour), ignore_boundary)
+    draw_square(x, y, *(BlockShapes.colour_to_rgb colour), ignore_boundary)
   end
 
   def self.draw_black_square(x, y, ignore_boundary = false)

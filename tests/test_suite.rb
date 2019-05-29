@@ -34,4 +34,20 @@ class TestSuite < MTest::Unit::TestCase
   end
 end
 
+class BlockShapesTests < MTest::Unit::TestCase
+  def test_square_shape
+    assert(BlockShapes.square_shape[0] == [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ])
+  end
+
+  def test_cannot_modify_shapes
+    square = BlockShapes.square_shape[0] 
+    assert_raise(FrozenError) do
+      square[0][0] = :cyan
+    end
+    assert_raise(FrozenError) do
+      square[0] = []
+    end
+  end
+end
+
 MTest::Unit.new.run

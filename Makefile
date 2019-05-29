@@ -2,7 +2,8 @@ TARGET = mrbtris.elf
 
 OBJS = src/mrbtris.o src/main.o src/game.o romdisk.o
 
-MRB_SOURCES=src/game.rb src/start_game.rb src/block_shapes.rb
+# order here is important!
+MRB_SOURCES=src/block_shapes.rb src/game.rb src/start_game.rb
 
 MRB_BYTECODE = src/game.c
 

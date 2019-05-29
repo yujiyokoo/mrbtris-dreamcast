@@ -8,3 +8,4 @@ test_bin
 README.html
 
 game.c
+test_suite.c
