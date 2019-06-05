@@ -6,31 +6,27 @@ class GameState
   def initialize(x, y)
     @x, @y = x, y
     @last_x, @last_y = 0, 0
-    @board = copy_board(empty_board)
+    @board = new_empty_board
     @next_shape = BlockShapes.random_shape
     @shape = BlockShapes.random_shape
     @shape_orientation, @last_shape_orientation = 0, 0
     @score = 0
   end
 
-  LEFT_AND_RIGHT_BLOCKS =
-    [:grey, false, false, false, false, false, false, false, false, false, false, :grey]
+  LEFT_AND_RIGHT_BLOCKS = ([:grey] + [false] * 10 + [:grey]).freeze
+  HORIZONTAL_WALL = ([:grey]*12).freeze
 
   # note that board starts from -1 to allow easy comparison when block gets to the left all
-  def empty_board
-    horizontal_wall =
-      [:grey, :grey, :grey, :grey, :grey, :grey, :grey, :grey, :grey, :grey, :grey, :grey]
-
-    [ horizontal_wall ] +
+  EMPTY_BOARD =
+    [ HORIZONTAL_WALL ] +
     [ LEFT_AND_RIGHT_BLOCKS ] * 20 +
-    [ horizontal_wall ] +
-    [[], []] # extra 2 rows for when it gets to the bottom
-  end
+    [ HORIZONTAL_WALL ] +
+    [[], []].freeze # extra 2 rows for when it gets to the bottom
 
-  def copy_board(original)
+  def new_empty_board
     new_board = []
 
-    empty_board.each { |row|
+    EMPTY_BOARD.each { |row|
       new_row = []
       row.each { |col|
         new_row.push col
@@ -41,19 +37,24 @@ class GameState
     new_board
   end
 
-  def clear_board
-    to_delete = []
+  def full_row_idxs
+    idxs = []
     (1..20).each {|idx|
       if @board[idx].reduce {|a,b| a&&b}
-        to_delete << idx
+        idxs << idx
       end
     }
-    to_delete.each { |i|
+    idxs
+  end
+
+  def clear_full_rows
+    fr_idxs = full_row_idxs
+    fr_idxs.each { |i|
       @board.delete_at(i)
       @board.insert(1, LEFT_AND_RIGHT_BLOCKS)
     }
     scores = [0, 1, 2, 3, 8]
-    @score += scores[to_delete.size]
+    @score += scores[fr_idxs.size]
   end
 
   def render_if_moved
@@ -100,24 +101,24 @@ class GameState
   end
 
   def board_section_for(x, y, horizontal_shift, vertical_shift)
-      left = @x + horizontal_shift
-      right = @x + horizontal_shift + 3
-      top = @y + vertical_shift
+    left = @x + horizontal_shift
+    right = @x + horizontal_shift + 3
+    top = @y + vertical_shift
 
-      left_or_zero = zero_if_negative(left)
+    left_or_zero = zero_if_negative(left)
 
-      outside_area = if left < 0
-        [false] * (0-left)
-      else
-        []
-      end
+    outside_area = if left < 0
+      [false] * (0-left)
+    else
+      []
+    end
 
-      [
-        outside_area + Array(@board[top][left_or_zero..right]),
-        outside_area + Array(@board[top+1][left_or_zero..right]),
-        outside_area + Array(@board[top+2][left_or_zero..right]),
-        outside_area + Array(@board[top+3][left_or_zero..right])
-      ]
+    [
+      outside_area + Array(@board[top][left_or_zero..right]),
+      outside_area + Array(@board[top+1][left_or_zero..right]),
+      outside_area + Array(@board[top+2][left_or_zero..right]),
+      outside_area + Array(@board[top+3][left_or_zero..right])
+    ]
   end
 
   def can_rotate_cw?
@@ -344,7 +345,7 @@ module MainGame
           moving_block.move_down
         else
           moving_block.save_to_board
-          moving_block.clear_board
+          moving_block.clear_full_rows
           Screen.draw_board(moving_block.board)
 
           moving_block.next_block(4, 0)
