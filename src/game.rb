@@ -1,7 +1,7 @@
 class BoardState
   attr_accessor :x, :y
 
-  attr_reader :board, :shape, :shape_orientation
+  attr_reader :board, :shape, :shape_orientation, :next_shape, :score
 
   def initialize(x, y, screen)
     @x, @y = x, y
@@ -55,17 +55,6 @@ class BoardState
     }
     scores = [0, 1, 2, 3, 8]
     @score += scores[fr_idxs.size]
-  end
-
-  def render_if_moved
-    if moved? || rotated?
-      erase_last_pos
-      @shape[@shape_orientation].each_with_index { |row, rownum|
-        row.each_with_index { |cell, colnum|
-          @screen.draw_colour_square(@x+colnum, @y+rownum, cell, false) if cell
-        }
-      }
-    end
   end
 
   def save_to_board
@@ -207,6 +196,17 @@ class BoardState
   end
 
   # TODO: should be on Screen?
+  def render_if_moved
+    if moved? || rotated?
+      erase_last_pos
+      @shape[@shape_orientation].each_with_index { |row, rownum|
+        row.each_with_index { |cell, colnum|
+          @screen.draw_colour_square(@x+colnum, @y+rownum, cell, false) if cell
+        }
+      }
+    end
+  end
+
   def erase_last_pos
     @shape[@last_shape_orientation].each_with_index { |row, rownum|
       row.each_with_index { |cell, colnum|
@@ -222,39 +222,37 @@ class BoardState
     @next_shape = BlockShapes.random_shape
     @shape_orientation = 0
   end
-
-  def make_4x4(shape)
-    shape.map { |row| row + [false] * (4 - row.size) }
-  end
-
-  def render_next_block
-    normalised_next_shape = make_4x4(@next_shape[0])
-    normalised_next_shape.each_with_index { |row, rownum|
-      row.each_with_index { |cell, colnum|
-        if cell
-          @screen.draw_colour_square(colnum + 14, rownum + 2, cell, true)
-        else
-          @screen.draw_black_square(colnum + 14, rownum + 2, true)
-        end
-      }
-    }
-  end
-
-  def render_score
-    @screen.render_score(@score)
-  end
 end
 
 class Screen
   LEFT_SPACE_PX=260
   TOP_SPACE_PX=20
 
+  attr_reader :dc2d
+
   def initialize(dc2d)
     @dc2d = dc2d
   end
 
-  def render_score(score)
-    @dc2d::render_score(score)
+  def render_score(board_state)
+    @dc2d::render_score(board_state.score)
+  end
+
+  def render_upcoming_block_pane(board_state)
+    normalised_next_shape = make_4x4(board_state.next_shape[0])
+    normalised_next_shape.each_with_index { |row, rownum|
+      row.each_with_index { |cell, colnum|
+        if cell
+          draw_colour_square(colnum + 14, rownum + 2, cell, true)
+        else
+          draw_black_square(colnum + 14, rownum + 2, true)
+        end
+      }
+    }
+  end
+
+  def make_4x4(shape)
+    shape.map { |row| row + [false] * (4 - row.size) }
   end
 
   def draw_square(x, y, r, g, b, ignore_boundary)
@@ -284,105 +282,138 @@ class Screen
   end
 end
 
-class MainGame
+class GameState
   FPS = 50
 
+  attr_accessor :frame, :tick, :curr_wait, :ticks_since_wait_change, :last_button_state, :button_state_unchanged_for, :board_state
+
+  def initialize(screen, board_state_class)
+    @screen = screen
+    @board_state_class = board_state_class
+    reset
+  end
+
+  def reset
+    @frame = 0
+    @tick = 0
+    @curr_wait = 10
+    @ticks_since_wait_change = 0
+    @last_button_state = 0
+    @button_state_unchanged_for = 0
+    @board_state = @board_state_class.new(4, 1, @screen)
+  end
+
+  def increment_frame
+    @frame = (@frame + 1) % FPS
+  end
+
+  def update_board_for_button_state
+    dc2d = @screen.dc2d
+    button_state = dc2d.get_button_state
+
+    if @last_button_state == button_state
+      @button_state_unchanged_for += 1
+    else
+      @button_state_unchanged_for = 0
+    end
+
+    if button_state
+      unless (@board_state.moved_horizontal? || @board_state.rotated?)
+        @board_state.move_left if dc2d.dpad_left?(button_state) && first_press_or_held_long
+        @board_state.move_right if dc2d.dpad_right?(button_state) && first_press_or_held_long
+        @board_state.clockwise if dc2d.btn_a?(button_state) && first_press_or_held_long
+        @board_state.anticlockwise if dc2d.btn_b?(button_state) && first_press_or_held_long
+      end
+
+      unless @board_state.moved_vertical?
+        @board_state.move_down if dc2d.dpad_down?(button_state)
+      end
+    end
+
+    @last_button_state = button_state
+  end
+
+  # TODO: state changes need to be tracked per button.
+  # This method faild to track 'up' press if you press b while you keep dpad up pressed
+  def first_press_or_held_long
+    @button_state_unchanged_for == 0 || @button_state_unchanged_for > 9
+  end
+
+  def board
+    @board_state.board
+  end
+end
+
+class MainGame
   SOLID_BOARD_BEFORE_START = ([].push [:grey] * 12) * 22
 
   def initialize(screen, dc2d)
     @dc2d = dc2d
     @screen = screen.new(@dc2d)
+    @game_state = GameState.new(@screen, BoardState)
   end
 
+  def wait_for_start_button
+    while true do
+      rand(1) # hopefully this would give us a "more random" start point
+      button_state = @dc2d::get_button_state
+
+      break if button_state && @dc2d::start_btn?(button_state)
+    end
+  end
 
   def main_loop
-    running = false
-
     @dc2d::clear_score(@score)
 
-    # 'main loop'
-    while true do
-      # Start of a game
+    while true do # 'main loop'
       @screen.draw_board(SOLID_BOARD_BEFORE_START)
 
-      while !running do
-        rand(1) # hopefully this would give us a "more random" start point
-        button_state = @dc2d::get_button_state
-        if button_state
-          running = true if @dc2d::start_btn?(button_state)
-        end
-      end
+      wait_for_start_button
+      running = true
 
-      frame = 0
-      tick = 0
-      curr_wait = 10
-      ticks_since_wait_change = 0
-      last_button_state = 0
-      button_state_unchanged_for = 0
+      @game_state.reset
 
-      moving_block = BoardState.new(4, 1, @screen)
-      @screen.draw_board(moving_block.board)
-      moving_block.render_next_block
-      moving_block.render_score
+      @screen.draw_board(@game_state.board)
+      @screen.render_upcoming_block_pane(@game_state.board_state)
+      @screen.render_score(@game_state.board_state)
 
       while running do
         # for the moment, let's assume this gives us 50hz...
         @dc2d::waitvbl
-        frame = (frame + 1) % FPS
+        @game_state.increment_frame
 
         # even if update doesn't happen, input should be recorded every frame
 
-        button_state = @dc2d::get_button_state
+        @game_state.update_board_for_button_state(@dc2d)
 
-        if last_button_state == button_state
-          button_state_unchanged_for += 1
+        next unless (@game_state.frame % 5) == 0
+
+        @game_state.board_state.render_if_moved
+
+        @game_state.board_state.save_current_position
+
+        @game_state.tick = (@game_state.tick + 1) % @game_state.curr_wait
+        next unless @game_state.tick == 0
+
+        @game_state.ticks_since_wait_change += 1
+        if @game_state.ticks_since_wait_change >= 50
+          @game_state.curr_wait -= 1 unless @game_state.curr_wait == 1
+          @game_state.ticks_since_wait_change = 0
+        end
+
+        if @game_state.board_state.can_drop?
+          @game_state.board_state.move_down
         else
-          button_state_unchanged_for = 0
-        end
+          @game_state.board_state.save_to_board
+          @game_state.board_state.clear_full_rows
+          @screen.draw_board(@game_state.board_state.board)
 
-        if button_state
-          unless (moving_block.moved_horizontal? || moving_block.rotated?)
-            moving_block.move_left if @dc2d::dpad_left?(button_state) && (button_state_unchanged_for == 0 || button_state_unchanged_for > 9)
-            moving_block.move_right if @dc2d::dpad_right?(button_state) && (button_state_unchanged_for == 0 || button_state_unchanged_for > 9)
-            moving_block.clockwise if @dc2d::btn_a?(button_state) && (button_state_unchanged_for == 0 || button_state_unchanged_for > 9)
-            moving_block.anticlockwise if @dc2d::btn_b?(button_state) && (button_state_unchanged_for == 0 || button_state_unchanged_for > 9)
-          end
+          @game_state.board_state.next_block(4, 0)
+          running = false unless @game_state.board_state.can_drop?
+          @game_state.board_state.move_down!
 
-          unless moving_block.moved_vertical?
-            moving_block.move_down if @dc2d::dpad_down?(button_state)
-          end
-        end
-
-        last_button_state = button_state
-
-        next unless (frame % 5) == 0
-
-        moving_block.render_if_moved
-
-        moving_block.save_current_position
-
-        tick = (tick + 1) % curr_wait
-        next unless tick == 0
-
-        ticks_since_wait_change += 1
-        if ticks_since_wait_change >= 50
-          curr_wait -= 1 unless curr_wait == 1
-          ticks_since_wait_change = 0
-        end
-
-        if moving_block.can_drop?
-          moving_block.move_down
-        else
-          moving_block.save_to_board
-          moving_block.clear_full_rows
-          @screen.draw_board(moving_block.board)
-
-          moving_block.next_block(4, 0)
-          running = false unless moving_block.can_drop?
-          moving_block.move_down!
-
-          moving_block.render_next_block
-          moving_block.render_score
+          @screen.render_upcoming_block_pane(@game_state.board_state)
+          @screen.render_score(@game_state.board_state)
         end
       end
     end

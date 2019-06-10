@@ -1,16 +1,28 @@
 class FakeDc2d
-  attr_accessor :drawn_squares
+  attr_accessor :drawn_squares, :button_state
   def initialize
     @drawn_squares = []
+    @button_state = 0
   end
 
   def draw20x20_640(x, y, r, g, b)
     @drawn_squares.push [x, y, r, g, b]
   end
+
+  def get_button_state
+    @button_state
+  end
+
+  def dpad_left?(arg); true ; end
+  def dpad_right?(arg); false ; end
+  def dpad_up?(arg); false ; end
+  def dpad_down?(arg); false ; end
+  def btn_a?(arg); false ; end
+  def btn_b?(arg); false ; end
 end
 
 class FakeScreen
-  attr_reader :coloured_squares, :black_squares
+  attr_reader :coloured_squares, :black_squares, :dc2d
 
   def initialize(dc2d)
     @dc2d = dc2d
@@ -28,7 +40,16 @@ class FakeScreen
 end
 
 class ExtendedBoardState < BoardState
-  attr_accessor :board, :score, :shape, :shape_orientation, :last_shape_orientation, :screen, :last_x, :last_y
+  attr_accessor :board, :score, :shape, :shape_orientation, :last_shape_orientation, :screen, :last_x, :last_y, :move_left_count
+
+  def initialize(*args)
+    @move_left_count = 0
+    super
+  end
+
+  def move_left
+    @move_left_count += 1
+  end
 end
 
 def setup_state_with_single_t
@@ -328,29 +349,6 @@ class BoardStateTests < MTest::Unit::TestCase
     assert(state.shape_orientation == 0, 'next_block sets shape_orientation to 0')
   end
 
-  def test_make_4x4_makes_3x3_shape_4x4
-    state = setup_state_with_single_t
-    sq_4x4 = [
-      [false, :yellow, :yellow, false],
-      [false, :yellow, :yellow, false],
-      [false, false, false, false],
-      [false, false, false, false]
-    ]
-    assert(state.make_4x4(BlockShapes::SQ[0]) == sq_4x4, 'make_4x4 makes shapes 4x4')
-  end
-
-  # test render_next_block
-  def test_render_next_block_renders_coloured_squares
-    state = setup_state_with_single_t
-    state.render_next_block
-    assert(state.screen.coloured_squares.size == 4, 'render_next_block draws 4 coloured squares')
-  end
-
-  def test_render_next_block_renders_black_squares
-    state = setup_state_with_single_t
-    state.render_next_block
-    assert(state.screen.black_squares.size == 12, 'render_next_block draws 12 black squares')
-  end
 end
 
 class ScreenTests < MTest::Unit::TestCase
@@ -365,7 +363,7 @@ class ScreenTests < MTest::Unit::TestCase
     fake_dc2d = FakeDc2d.new
     screen = Screen.new(fake_dc2d)
     screen.draw_square(-1, -1, 0, 0, 0, true)
-    assert(fake_dc2d.drawn_squares.size == 1, 'negative coordinates are ignored')
+    assert(fake_dc2d.drawn_squares.size == 1, 'negative coordinates are not ignored if ignore boundary flag is true')
   end
 
   def test_draw_board_draws_full_board
@@ -374,7 +372,93 @@ class ScreenTests < MTest::Unit::TestCase
     state = setup_state_with_single_t
     screen.draw_board(state.board)
     # full board is 12 * 22
-    assert(fake_dc2d.drawn_squares.size == 12 * 22, 'negative coordinates are ignored')
+    assert(fake_dc2d.drawn_squares.size == 12 * 22, 'full board is drawn')
+  end
+
+  def test_render_next_block_renders_coloured_squares
+    fake_dc2d = FakeDc2d.new
+    screen = Screen.new(fake_dc2d)
+    state = setup_state_with_single_t
+    screen.render_upcoming_block_pane(state)
+    coloured_squares = fake_dc2d.drawn_squares.select { |sq|
+      sq[2] != 0 || sq[3] != 0 || sq[4] != 0
+    }
+    assert(coloured_squares.size == 4, 'render_upcoming_block_pane draws 4 coloured squares')
+  end
+
+  def test_render_next_block_renders_black_squares
+    fake_dc2d = FakeDc2d.new
+    screen = Screen.new(fake_dc2d)
+    state = setup_state_with_single_t
+    screen.render_upcoming_block_pane(state)
+    black_squares = fake_dc2d.drawn_squares.select { |sq|
+      sq[2] == 0 && sq[3] == 0 && sq[4] == 0
+    }
+    assert(black_squares.size == 12, 'render_upcoming_block_pane draws 12 black squares')
+  end
+
+  def test_make_4x4_makes_3x3_shape_4x4
+    screen = Screen.new(FakeDc2d.new)
+    sq_4x4 = [
+      [false, :yellow, :yellow, false],
+      [false, :yellow, :yellow, false],
+      [false, false, false, false],
+      [false, false, false, false]
+    ]
+    assert(screen.make_4x4(BlockShapes::SQ[0]) == sq_4x4, 'make_4x4 makes shapes 4x4')
+  end
+end
+
+class GameStateTests < MTest::Unit::TestCase
+  def test_reset_resets_game_state
+    game_state = GameState.new(FakeScreen.new(FakeDc2d.new), ExtendedBoardState)
+    game_state.frame = game_state.tick = game_state.last_button_state = 100
+    game_state.reset
+    assert( [game_state.frame, game_state.tick, game_state.last_button_state].all? { |x| x == 0 }, 'reset resets values')
+  end
+
+  def test_increment_frame_goes_to_1_from_50
+    game_state = GameState.new(FakeScreen.new(FakeDc2d.new), ExtendedBoardState)
+    game_state.frame = 50
+    game_state.increment_frame
+    assert(game_state.frame == 1, 'increment goes from 50 to 1')
+  end
+
+  def test_update_board_for_button_state_increments_state_unchanged_for
+    game_state = GameState.new(FakeScreen.new(FakeDc2d.new), ExtendedBoardState)
+    game_state.reset
+    game_state.update_board_for_button_state
+    assert(game_state.button_state_unchanged_for == 1, 'update_board_for_button_state increments state_unchanged_for')
+  end
+
+  def test_update_board_for_button_state_moves_left
+    dc2d = FakeDc2d.new
+    game_state = GameState.new(FakeScreen.new(dc2d), ExtendedBoardState)
+    game_state.reset
+    dc2d.button_state = 64 # unsigned int 64 is 'LEFT'
+    game_state.board_state.last_x = game_state.board_state.x = 0
+    game_state.update_board_for_button_state
+    assert(game_state.board_state.move_left_count == 1, 'move_left called once')
+  end
+
+  def test_update_board_for_button_state_does_not_move_left_if_moved_already
+    dc2d = FakeDc2d.new
+    game_state = GameState.new(FakeScreen.new(dc2d), ExtendedBoardState)
+    game_state.reset
+    dc2d.button_state = 64 # unsigned int 64 is 'LEFT'
+    game_state.board_state.last_x = game_state.board_state.x + 1
+    game_state.update_board_for_button_state
+    assert(game_state.board_state.move_left_count == 0, 'move_left is not called if moved already')
+  end
+
+  def test_update_board_for_button_state_does_not_move_left_if_rotated_already
+    dc2d = FakeDc2d.new
+    game_state = GameState.new(FakeScreen.new(dc2d), ExtendedBoardState)
+    game_state.reset
+    dc2d.button_state = 64 # unsigned int 64 is 'LEFT'
+    game_state.board_state.last_shape_orientation = game_state.board_state.shape_orientation + 1
+    game_state.update_board_for_button_state
+    assert(game_state.board_state.move_left_count == 0, 'move_left is not called if rotated already')
   end
 end
 
