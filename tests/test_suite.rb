@@ -27,25 +27,25 @@ class FakeScreen
   end
 end
 
-class ExtendedGameState < GameState
+class ExtendedBoardState < BoardState
   attr_accessor :board, :score, :shape, :shape_orientation, :last_shape_orientation, :screen, :last_x, :last_y
 end
 
 def setup_state_with_single_t
-  state = ExtendedGameState.new(0, 1, FakeScreen.new(FakeDc2d.new))
+  state = ExtendedBoardState.new(0, 1, FakeScreen.new(FakeDc2d.new))
   state.shape = BlockShapes::T
   state.shape_orientation += 1
   state
 end
 
-class GameStateTests < MTest::Unit::TestCase
+class BoardStateTests < MTest::Unit::TestCase
   def test_trivial
-    GameState.new(4, 1, Screen.new(FakeDc2d.new))
-    assert(true, 'GameState initialises without crashing')
+    BoardState.new(4, 1, Screen.new(FakeDc2d.new))
+    assert(true, 'BoardState initialises without crashing')
   end
 
   def test_initialisation
-    state = GameState.new(2, 3, Screen.new(FakeDc2d.new))
+    state = BoardState.new(2, 3, Screen.new(FakeDc2d.new))
     assert(state.x == 2, 'sets x')
     assert(state.y == 3, 'sets y')
   end
@@ -68,24 +68,24 @@ class GameStateTests < MTest::Unit::TestCase
       ["100000000001"] * 20 +
       ["111111111111"]
 
-    board = GameState::EMPTY_BOARD
+    board = BoardState::EMPTY_BOARD
     assert(render_board(board) == expected_empty, 'Empty board returns empty board')
   end
 
   def test_new_empty_board_makes_new_instance
-    state = GameState.new(5, 5, Screen.new(FakeDc2d.new))
+    state = BoardState.new(5, 5, Screen.new(FakeDc2d.new))
     board = state.new_empty_board
     assert(state.new_empty_board.object_id != board.object_id, 'new empty board object id is different')
   end
 
   def board_with_4_full_rows
-    [ExtendedGameState::HORIZONTAL_WALL] +
-    [ExtendedGameState::LEFT_AND_RIGHT_BLOCKS]*16 +
-    [ExtendedGameState::HORIZONTAL_WALL]*5 + [[], []]
+    [ExtendedBoardState::HORIZONTAL_WALL] +
+    [ExtendedBoardState::LEFT_AND_RIGHT_BLOCKS]*16 +
+    [ExtendedBoardState::HORIZONTAL_WALL]*5 + [[], []]
   end
 
   def test_clear_full_rows_removes_full_rows
-    state = ExtendedGameState.new(1, 2, Screen.new(FakeDc2d.new))
+    state = ExtendedBoardState.new(1, 2, Screen.new(FakeDc2d.new))
     state.board = board_with_4_full_rows
 
     full_row_count = state.full_row_idxs.size
@@ -98,7 +98,7 @@ class GameStateTests < MTest::Unit::TestCase
   end
 
   def test_clear_full_rows_keeps_row_height
-    state = ExtendedGameState.new(1, 2, Screen.new(FakeDc2d.new))
+    state = ExtendedBoardState.new(1, 2, Screen.new(FakeDc2d.new))
     state.board = board_with_4_full_rows
 
     assert(state.board.size == 24, 'board length is 24')
@@ -107,7 +107,7 @@ class GameStateTests < MTest::Unit::TestCase
   end
 
   def test_clear_full_rows_adds_score
-    state = ExtendedGameState.new(1, 2, Screen.new(FakeDc2d.new))
+    state = ExtendedBoardState.new(1, 2, Screen.new(FakeDc2d.new))
     state.board = board_with_4_full_rows
 
     assert(state.score == 0, 'initial score is 0')
@@ -117,14 +117,14 @@ class GameStateTests < MTest::Unit::TestCase
 
   def test_render_if_moved_renders_falling_block_if_moved
     fake_screen = FakeScreen.new FakeDc2d.new
-    state = GameState.new(1, 2, fake_screen)
+    state = BoardState.new(1, 2, fake_screen)
     state.render_if_moved
     assert(fake_screen.coloured_squares.size == 4, 'calls draw_colour_square n times where n = block size if moved')
   end
 
   def test_render_if_moved_renders_falling_block_if_rotated
     fake_screen = FakeScreen.new FakeDc2d.new
-    state = ExtendedGameState.new(0, 0, fake_screen)
+    state = ExtendedBoardState.new(0, 0, fake_screen)
     state.shape_orientation = 1
     state.last_shape_orientation = 0
     state.render_if_moved
@@ -133,14 +133,14 @@ class GameStateTests < MTest::Unit::TestCase
 
   def test_render_if_moved_does_not_render_if_not_moved_or_rotated
     fake_screen = FakeScreen.new FakeDc2d.new
-    state = GameState.new(0, 0, fake_screen)
+    state = BoardState.new(0, 0, fake_screen)
     state.render_if_moved
     assert(fake_screen.coloured_squares.size == 0, 'calls draw_colour_square 0 times if not moved or rotated')
   end
 
 
   def setup_state_with_single_square
-    state = ExtendedGameState.new(1, 1, Screen.new(FakeDc2d.new))
+    state = ExtendedBoardState.new(1, 1, Screen.new(FakeDc2d.new))
     state.shape = BlockShapes::SQ
     state.save_to_board
     state

@@ -1,4 +1,4 @@
-class GameState
+class BoardState
   attr_accessor :x, :y
 
   attr_reader :board, :shape, :shape_orientation
@@ -287,18 +287,24 @@ end
 class MainGame
   FPS = 50
 
+  SOLID_BOARD_BEFORE_START = ([].push [:grey] * 12) * 22
+
   def initialize(screen, dc2d)
     @dc2d = dc2d
     @screen = screen.new(@dc2d)
   end
+
 
   def main_loop
     running = false
 
     @dc2d::clear_score(@score)
 
+    # 'main loop'
     while true do
-      @screen.draw_board(([].push [:grey] * 12) * 22)
+      # Start of a game
+      @screen.draw_board(SOLID_BOARD_BEFORE_START)
+
       while !running do
         rand(1) # hopefully this would give us a "more random" start point
         button_state = @dc2d::get_button_state
@@ -314,7 +320,7 @@ class MainGame
       last_button_state = 0
       button_state_unchanged_for = 0
 
-      moving_block = GameState.new(4, 1, @screen)
+      moving_block = BoardState.new(4, 1, @screen)
       @screen.draw_board(moving_block.board)
       moving_block.render_next_block
       moving_block.render_score
