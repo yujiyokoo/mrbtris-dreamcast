@@ -24,14 +24,10 @@ class BoardState
     [ HORIZONTAL_WALL ].freeze
 
   def new_empty_board
-    new_board = []
+    new_board = Array.new
 
     EMPTY_BOARD.each { |row|
-      new_row = []
-      row.each { |col|
-        new_row.push col
-      }
-      new_board.push new_row
+      new_board.push row.compact # compact simply copies if no nil present
     }
 
     new_board
@@ -384,7 +380,7 @@ class MainGame
 
         # even if update doesn't happen, input should be recorded every frame
 
-        @game_state.update_board_for_button_state(@dc2d)
+        @game_state.update_board_for_button_state
 
         next unless (@game_state.frame % 5) == 0
 

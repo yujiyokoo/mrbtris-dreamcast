@@ -25,7 +25,7 @@ KOS_INIT_ROMDISK(romdisk);
 extern const uint8_t game[]; // declared in the rb file
 
 int main(int argc, char **argv) {
-    vid_set_mode(DM_640x480_PAL_IL, PM_RGB565); // or DM_768x576_PAL_IL ?
+    vid_set_mode(DM_640x480_NTSC_IL, PM_RGB565); // or DM_768x576_PAL_IL ?
 
     mrb_state *mrb = mrb_open();
     if (!mrb) { return 1; }
