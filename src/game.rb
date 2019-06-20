@@ -47,7 +47,7 @@ class BoardState
     fr_idxs = full_row_idxs
     fr_idxs.each { |i|
       @board.delete_at(i)
-      @board.insert(1, LEFT_AND_RIGHT_BLOCKS)
+      @board.insert(1, LEFT_AND_RIGHT_BLOCKS.compact) # compact simply copies if no nil present
     }
     scores = [0, 1, 2, 3, 8]
     @score += scores[fr_idxs.size]
