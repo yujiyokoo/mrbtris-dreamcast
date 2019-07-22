@@ -382,7 +382,7 @@ class MainGame
 
         @game_state.update_board_for_button_state
 
-        next unless (@game_state.frame % 5) == 0
+        next unless (@game_state.frame % 3) == 0
 
         @game_state.board_state.render_if_moved
 
@@ -392,7 +392,7 @@ class MainGame
         next unless @game_state.tick == 0
 
         @game_state.ticks_since_wait_change += 1
-        if @game_state.ticks_since_wait_change >= 50
+        if @game_state.ticks_since_wait_change >= 30
           @game_state.curr_wait -= 1 unless @game_state.curr_wait == 1
           @game_state.ticks_since_wait_change = 0
         end
