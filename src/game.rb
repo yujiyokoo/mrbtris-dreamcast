@@ -400,7 +400,13 @@ class MainGame
           end
 
           @game_state.board_state.next_block(4, 0)
-          running = false unless @game_state.board_state.can_drop?
+          if !@game_state.board_state.can_drop?
+            # Stacked to the top...
+            running = false
+            @game_state.board_state.move_down!
+            @game_state.board_state.save_to_board
+            @screen.draw_board(@game_state.board_state.board) # re-render whole board with finished state
+          end
           @game_state.board_state.move_down!
 
           @screen.render_upcoming_block_pane(@game_state.board_state)
