@@ -206,7 +206,7 @@ class BoardState
   def erase_last_pos
     @shape[@last_shape_orientation].each_with_index { |row, rownum|
       row.each_with_index { |cell, colnum|
-        @screen.draw_black_square(@last_x+colnum, @last_y+rownum, false) if cell
+        @screen.draw_black_square(@last_x+colnum, @last_y+rownum, false) if cell && cell != @shape[@shape_orientation]
       }
     }
   end
@@ -369,7 +369,6 @@ class MainGame
       @screen.render_score(@game_state.board_state)
 
       while running do
-        # for the moment, let's assume this gives us 50hz...
         @dc2d::waitvbl
         @game_state.increment_frame
 
