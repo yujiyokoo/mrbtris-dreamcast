@@ -50,6 +50,7 @@ class BoardState
     }
     scores = [0, 1, 2, 3, 8]
     @score += scores[fr_idxs.size]
+    fr_idxs.size
   end
 
   def save_to_board
@@ -333,10 +334,6 @@ class GameState
   def first_press_or_held_long
     @button_state_unchanged_for == 0 || @button_state_unchanged_for > 9
   end
-
-  def board
-    @board_state.board
-  end
 end
 
 class MainGame
@@ -367,7 +364,7 @@ class MainGame
 
       @game_state.reset
 
-      @screen.draw_board(@game_state.board)
+      @screen.draw_board(@game_state.board_state.board)
       @screen.render_upcoming_block_pane(@game_state.board_state)
       @screen.render_score(@game_state.board_state)
 
@@ -399,8 +396,9 @@ class MainGame
           @game_state.board_state.move_down
         else
           @game_state.board_state.save_to_board
-          @game_state.board_state.clear_full_rows
-          @screen.draw_board(@game_state.board_state.board)
+          if @game_state.board_state.clear_full_rows > 0 # clear full rows, and if any full (and deleted)
+            @screen.draw_board(@game_state.board_state.board) # re-render whole board
+          end
 
           @game_state.board_state.next_block(4, 0)
           running = false unless @game_state.board_state.can_drop?
