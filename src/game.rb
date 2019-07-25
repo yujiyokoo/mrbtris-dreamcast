@@ -303,8 +303,13 @@ class GameState
     @curr_wait = 10
     @ticks_since_wait_change = 0
     @last_button_state = 0
-    @button_state_unchanged_for = 0
     @board_state = @board_state_class.new(4, 1, @screen)
+    @left_unchanged_for = 0
+    @right_unchanged_for = 0
+    @up_unchanged_for = 0
+    @down_unchanged_for = 0
+    @a_unchanged_for = 0
+    @b_unchanged_for = 0
   end
 
   def increment_frame
@@ -315,18 +320,48 @@ class GameState
     dc2d = @screen.dc2d
     button_state = dc2d.get_button_state
 
-    if @last_button_state == button_state
-      @button_state_unchanged_for += 1
+    if dc2d.dpad_left?(@last_button_state) == dc2d.dpad_left?(button_state)
+      @left_unchanged_for += 1
     else
-      @button_state_unchanged_for = 0
+      @left_unchanged_for = 0
+    end
+
+    if dc2d.dpad_right?(@last_button_state) == dc2d.dpad_right?(button_state)
+      @right_unchanged_for += 1
+    else
+      @right_unchanged_for = 0
+    end
+
+    if dc2d.dpad_up?(@last_button_state) == dc2d.dpad_up?(button_state)
+      @up_unchanged_for += 1
+    else
+      @up_unchanged_for = 0
+    end
+
+    if dc2d.dpad_down?(@last_button_state) == dc2d.dpad_down?(button_state)
+      @down_unchanged_for += 1
+    else
+      @down_unchanged_for = 0
+    end
+
+    if dc2d.btn_a?(@last_button_state) == dc2d.btn_a?(button_state)
+      @a_unchanged_for += 1
+    else
+      @a_unchanged_for = 0
+    end
+
+    if dc2d.btn_b?(@last_button_state) == dc2d.btn_b?(button_state)
+      @b_unchanged_for += 1
+    else
+      @b_unchanged_for = 0
     end
 
     if button_state
       unless (@board_state.moved_horizontal? || @board_state.rotated?)
-        @board_state.move_left if dc2d.dpad_left?(button_state) && first_press_or_held_long
-        @board_state.move_right if dc2d.dpad_right?(button_state) && first_press_or_held_long
-        @board_state.clockwise if dc2d.btn_a?(button_state) && first_press
-        @board_state.anticlockwise if dc2d.btn_b?(button_state) && first_press
+        @board_state.move_left if dc2d.dpad_left?(button_state) && (@left_unchanged_for == 0 || @left_unchanged_for > 9)
+        @board_state.move_right if dc2d.dpad_right?(button_state) && (@right_unchanged_for == 0 || @right_unchanged_for > 9)
+        @board_state.clockwise if dc2d.btn_a?(button_state) && @a_unchanged_for == 0
+        @board_state.anticlockwise if dc2d.btn_b?(button_state) && @b_unchanged_for == 0
       end
 
       unless @board_state.moved_vertical?
@@ -335,16 +370,6 @@ class GameState
     end
 
     @last_button_state = button_state
-  end
-
-  # TODO: state changes need to be tracked per button.
-  # This method faild to track 'up' press if you press b while you keep dpad up pressed
-  def first_press_or_held_long
-    @button_state_unchanged_for == 0 || @button_state_unchanged_for > 9
-  end
-
-  def first_press
-    @button_state_unchanged_for == 0
   end
 end
 
