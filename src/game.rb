@@ -17,7 +17,6 @@ class BoardState
   LEFT_AND_RIGHT_BLOCKS = ([:grey] + [false] * 10 + [:grey]).freeze
   HORIZONTAL_WALL = ([:grey]*12).freeze
 
-  # note that board starts from -1 to allow easy comparison when block gets to the left all
   EMPTY_BOARD =
     [ HORIZONTAL_WALL ] +
     [ LEFT_AND_RIGHT_BLOCKS ] * 20 +
@@ -361,9 +360,8 @@ class MainGame
   def main_loop
     @dc2d::clear_score(@score)
 
+    @screen.draw_board(SOLID_BOARD_BEFORE_START)
     while true do # 'main loop'
-      @screen.draw_board(SOLID_BOARD_BEFORE_START)
-
       wait_for_start_button
       running = true
 
