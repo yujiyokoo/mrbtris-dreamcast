@@ -325,8 +325,8 @@ class GameState
       unless (@board_state.moved_horizontal? || @board_state.rotated?)
         @board_state.move_left if dc2d.dpad_left?(button_state) && first_press_or_held_long
         @board_state.move_right if dc2d.dpad_right?(button_state) && first_press_or_held_long
-        @board_state.clockwise if dc2d.btn_a?(button_state) && first_press_or_held_long
-        @board_state.anticlockwise if dc2d.btn_b?(button_state) && first_press_or_held_long
+        @board_state.clockwise if dc2d.btn_a?(button_state) && first_press
+        @board_state.anticlockwise if dc2d.btn_b?(button_state) && first_press
       end
 
       unless @board_state.moved_vertical?
@@ -341,6 +341,10 @@ class GameState
   # This method faild to track 'up' press if you press b while you keep dpad up pressed
   def first_press_or_held_long
     @button_state_unchanged_for == 0 || @button_state_unchanged_for > 9
+  end
+
+  def first_press
+    @button_state_unchanged_for == 0
   end
 end
 
