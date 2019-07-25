@@ -211,6 +211,14 @@ class BoardState
     }
   end
 
+  def whiten_curr_pos
+     @shape[@shape_orientation].each_with_index { |row, rownum|
+      row.each_with_index { |_cell, colnum|
+        @screen.draw_colour_square(@x+colnum, @y+rownum, :white, false) if _cell
+      }
+    }
+  end
+
   def next_block(x, y)
     @x, @y = x, y
     @last_x, @last_y = 0, 0
@@ -395,9 +403,9 @@ class MainGame
           @game_state.board_state.move_down
         else
           @game_state.board_state.save_to_board
-          if @game_state.board_state.clear_full_rows > 0 # clear full rows, and if any full (and deleted)
-            @screen.draw_board(@game_state.board_state.board) # re-render whole board
-          end
+          @game_state.board_state.whiten_curr_pos
+          @game_state.board_state.clear_full_rows
+          @screen.draw_board(@game_state.board_state.board) # re-render whole board
 
           @game_state.board_state.next_block(4, 0)
           if !@game_state.board_state.can_drop?

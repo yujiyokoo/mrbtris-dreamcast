@@ -70,6 +70,8 @@ class BlockShapes
       [0, 0, 255]
     when :orange
       [255, 165, 0]
+    when :white
+      [255, 255, 255]
     else
       [0, 0, 0]
     end
