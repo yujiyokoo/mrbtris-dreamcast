@@ -4,52 +4,52 @@ class BlockShapes
   end
 
   SQ = freeze_3_levels [
-      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
-      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
-      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
-      [ [false, :yellow, :yellow], [false, :yellow, :yellow], [], [] ],
+      [ [false, :yellow, :yellow, false], [false, :yellow, :yellow, false], [], [] ],
+      [ [false, :yellow, :yellow, false], [false, :yellow, :yellow, false], [], [] ],
+      [ [false, :yellow, :yellow, false], [false, :yellow, :yellow, false], [], [] ],
+      [ [false, :yellow, :yellow, false], [false, :yellow, :yellow, false], [], [] ],
     ]
 
   I = freeze_3_levels [
       [ [], [:cyan, :cyan, :cyan, :cyan], [], [] ],
-      [ [false, false, :cyan], [false, false, :cyan], [false, false, :cyan], [false, false, :cyan] ],
+      [ [false, false, :cyan, false], [false, false, :cyan, false], [false, false, :cyan, false], [false, false, :cyan, false] ],
       [ [], [], [:cyan, :cyan, :cyan, :cyan], [] ],
-      [ [false, :cyan], [false, :cyan], [false, :cyan], [false, :cyan] ]
+      [ [false, :cyan, false, false], [false, :cyan, false, false], [false, :cyan, false, false], [false, :cyan, false, false] ]
     ]
 
   L = freeze_3_levels  [
-      [ [false, false, :orange], [:orange, :orange, :orange], [], [] ],
-      [ [false, :orange, false], [false, :orange, false], [false, :orange, :orange], [] ],
-      [ [false, false, false], [:orange, :orange, :orange], [:orange, false, false], [] ],
-      [ [:orange, :orange, false], [false, :orange, false], [false, :orange, false], [] ]
+      [ [false, false, :orange, false], [:orange, :orange, :orange, false], [], [] ],
+      [ [false, :orange, false, false], [false, :orange, false, false], [false, :orange, :orange, false], [] ],
+      [ [], [:orange, :orange, :orange, false], [:orange, false, false, false], [] ],
+      [ [:orange, :orange, false, false], [false, :orange, false, false], [false, :orange, false, false], [] ]
     ]
 
   J = freeze_3_levels [
-      [ [:blue, false, false], [:blue, :blue, :blue], [], [] ],
-      [ [false, :blue, :blue], [false, :blue, false], [false, :blue, false], [] ],
-      [ [false, false, false], [:blue, :blue, :blue], [false, false, :blue], [] ],
-      [ [false, :blue, false], [false, :blue, false], [:blue, :blue, false], [] ]
+      [ [:blue, false, false, false], [:blue, :blue, :blue, false], [], [] ],
+      [ [false, :blue, :blue, false], [false, :blue, false, false], [false, :blue, false, false], [] ],
+      [ [], [:blue, :blue, :blue, false], [false, false, :blue, false], [] ],
+      [ [false, :blue, false, false], [false, :blue, false, false], [:blue, :blue, false, false], [] ]
     ]
 
   S = freeze_3_levels [
-      [ [false, :green, :green], [:green, :green, false], [], [] ],
-      [ [false, :green, false], [false, :green, :green], [false, false, :green], [] ],
-      [ [false, false, false], [false, :green, :green], [:green, :green, false], [] ],
-      [ [:green, false, false], [:green, :green, false], [false, :green, false], [] ]
+      [ [false, :green, :green, false], [:green, :green, false, false], [], [] ],
+      [ [false, :green, false, false], [false, :green, :green, false], [false, false, :green, false], [] ],
+      [ [], [false, :green, :green, false], [:green, :green, false, false], [] ],
+      [ [:green, false, false, false], [:green, :green, false, false], [false, :green, false, false], [] ]
     ]
 
   Z = freeze_3_levels [
-      [ [:red, :red, false], [false, :red, :red], [], [] ],
-      [ [false, false, :red], [false, :red, :red], [false, :red, false], [] ],
-      [ [false, false, false], [:red, :red, false], [false, :red, :red], [] ],
-      [ [false, :red, false], [:red, :red, false], [:red, false, false], [] ]
+      [ [:red, :red, false, false], [false, :red, :red, false], [], [] ],
+      [ [false, false, :red, false], [false, :red, :red, false], [false, :red, false, false], [] ],
+      [ [], [:red, :red, false, false], [false, :red, :red, false], [] ],
+      [ [false, :red, false, false], [:red, :red, false, false], [:red, false, false, false], [] ]
     ]
 
   T = freeze_3_levels [
-      [ [false, :purple, false], [:purple, :purple, :purple], [], [] ],
-      [ [false, :purple, false], [false, :purple, :purple], [false, :purple, false], [] ],
-      [ [false, false, false], [:purple, :purple, :purple], [false, :purple, false], [] ],
-      [ [false, :purple, false], [:purple, :purple, false], [false, :purple, false], [] ]
+      [ [false, :purple, false, false], [:purple, :purple, :purple, false], [], [] ],
+      [ [false, :purple, false, false], [false, :purple, :purple, false], [false, :purple, false, false], [] ],
+      [ [], [:purple, :purple, :purple, false], [false, :purple, false, false], [] ],
+      [ [false, :purple, false, false], [:purple, :purple, false, false], [false, :purple, false, false], [] ]
     ]
 
   def self.colour_to_rgb(colour)
@@ -78,8 +78,12 @@ class BlockShapes
   end
 
   def self.random_shape
-    candidates = [SQ, I, L, J, S, Z, T]
+    candidates = all_shapes
 
     candidates[rand(candidates.size)]
+  end
+
+  def self.all_shapes
+    [[:sq, SQ], [:i, I], [:l, L], [:j, J], [:s, S], [:z, Z], [:t, T]]
   end
 end
