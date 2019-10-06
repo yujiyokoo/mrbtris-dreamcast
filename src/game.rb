@@ -442,8 +442,8 @@ class GameState
   end
 
   def update_board_for_indices(frame_idxs, dc2d)
+    ubfi_start = dc2d::get_current_ms
     btn_pressed = {}
-
 
     [:d_left, :d_right, :d_up, :d_down, :a, :b].each { |key|
       if frame_idxs.all? { |idx| @cont[key] & @button_states[idx] == @cont[key] & @last_btn_state }
@@ -456,6 +456,7 @@ class GameState
       end
     }
     @last_btn_state = @button_states[frame_idxs[-1]]
+    $profile << "        update_for_indices h-check: #{ dc2d::get_current_ms - ubfi_start}, w/ #{frame_idxs.size} frames"
 
     unless @board_state.moved_horizontal? # XXX: is this necesarry?
       left_input = btn_pressed[:d_left] || @held_buttons[:d_left] > 10
@@ -463,15 +464,18 @@ class GameState
       @board_state.move_left(dc2d) if left_input
       @board_state.move_right if right_input
     end
+    $profile << ", after horz: #{ dc2d::get_current_ms - ubfi_start}"
 
     unless @board_state.rotated?
       @board_state.clockwise if btn_pressed[:a] || @held_buttons[:a] > 10
       @board_state.anticlockwise if btn_pressed[:b] || @held_buttons[:b] > 10
     end
+    $profile << ", after rot: #{ dc2d::get_current_ms - ubfi_start}"
 
     unless @board_state.moved_vertical?
       @board_state.move_down if btn_pressed[:d_down] || @held_buttons[:d_down] > 10
     end
+    $profile << ", after vert: #{ dc2d::get_current_ms - ubfi_start}\n"
   end
 
   def check_btn_state_change(key, last_btn_state, curr_btn_state)
@@ -568,7 +572,6 @@ class MainGame
 
       prev0 = 0
       current0 = 0
-      prev1 = 0
 
       @game_state.discard_button_buffer(@dc2d)
 
@@ -578,13 +581,11 @@ class MainGame
         $profile << "...#{@dc2d::get_current_ms - before_wait}.\n"
 
         current0 = @dc2d::get_current_ms
-        # puts "elapsed: #{current - prev}, current: #{current}"
         $profile << "elapsed: #{current0 - prev0}\n"
         prev0 = current0
 
         @game_state.increment_frame
 
-        # even if update doesn't happen, input should be recorded every frame
         prev_button_index = @game_state.curr_button_index
         @game_state.update_button_states(@dc2d)
 
@@ -599,18 +600,16 @@ class MainGame
           running = false
         end
 
-        current1 = @dc2d::get_current_ms
-        # puts "elapsed: #{current - prev}, current: #{current}"
-        # $profile << "before frame loop... elapsed: #{current1 - prev1}\n"
-        prev1 = current1
-
-        $profile << "right before frame_idxs loop, elapsed: #{@dc2d::get_current_ms - prev0}\n"
-
         curr = @dc2d::get_current_ms
+
+        $profile << "before update_board_for...: #{@dc2d::get_current_ms - prev0}\n"
 
         @game_state.update_board_for_indices(frame_idxs, @dc2d)
 
+        $profile << "before render...: #{@dc2d::get_current_ms - prev0}\n"
         @game_state.board_state.render_if_moved(@dc2d)
+
+        $profile << "before looping back: #{@dc2d::get_current_ms - prev0}\n" unless (@game_state.frame % 3) == 0
 
         next unless (@game_state.frame % 3) == 0
 
@@ -655,9 +654,6 @@ class MainGame
           @game_state.discard_button_buffer(@dc2d)
           $profile << "  --- in frame_idx loop after everything: #{@dc2d::get_current_ms - curr}\n"
         end
-        #current2 = @dc2d::get_current_ms
-        # puts "elapsed: #{current - prev}, current: #{current}"
-        #$profile << "after frame loop... frame loop took: #{current2 - current1}\n"
 
         @game_state.board_state.render_if_moved(@dc2d)
       end
