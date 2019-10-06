@@ -410,8 +410,10 @@ class GameState
     @ticks_since_wait_change = 0
     @board_state = @board_state_class.new(4, 1, @screen)
     @unchanged_buttons = {left: 0, right: 0, up: 0, down: 0, a: 0, b: 0}
+    @held_buttons = {start: 0, d_left: 0, d_right: 0, d_up: 0, d_down: 0, a: 0, b: 0}
     @controller_buf_last_index = 0 # we read from last index + 1 when getting input
     @button_states = [0] * BUFSIZE
+    @last_btn_state = @button_states[0]
     @curr_button_index = 0
   end
 
@@ -437,6 +439,39 @@ class GameState
 
   def exit_input?(frame_idxs)
     frame_idxs.any? { |idx| @cont[:start] & @button_states[idx] != 0 }
+  end
+
+  def update_board_for_indices(frame_idxs, dc2d)
+    btn_pressed = {}
+
+
+    [:d_left, :d_right, :d_up, :d_down, :a, :b].each { |key|
+      if frame_idxs.all? { |idx| @cont[key] & @button_states[idx] == @cont[key] & @last_btn_state }
+        @held_buttons[key] += 1 if (@cont[key] & @button_states[frame_idxs[-1]]) != 0
+      else
+        @held_buttons[key] = 0
+        if (@cont[key] & @button_states[frame_idxs[-1]]) != 0
+          btn_pressed[key] = true
+        end
+      end
+    }
+    @last_btn_state = @button_states[frame_idxs[-1]]
+
+    unless @board_state.moved_horizontal? # XXX: is this necesarry?
+      left_input = btn_pressed[:d_left] || @held_buttons[:d_left] > 10
+      right_input = btn_pressed[:d_right] || @held_buttons[:d_right] > 10
+      @board_state.move_left(dc2d) if left_input
+      @board_state.move_right if right_input
+    end
+
+    unless @board_state.rotated?
+      @board_state.clockwise if btn_pressed[:a] || @held_buttons[:a] > 10
+      @board_state.anticlockwise if btn_pressed[:b] || @held_buttons[:b] > 10
+    end
+
+    unless @board_state.moved_vertical?
+      @board_state.move_down if btn_pressed[:d_down] || @held_buttons[:d_down] > 10
+    end
   end
 
   def check_btn_state_change(key, last_btn_state, curr_btn_state)
@@ -552,7 +587,7 @@ class MainGame
         frame_idxs = if prev_button_index > @game_state.curr_button_index
           (prev_button_index..(GameState::BUFSIZE-1)).to_a + (0..@game_state.curr_button_index).to_a
         else
-          (prev_button_index..@game_state.curr_button_index)
+          (prev_button_index..@game_state.curr_button_index).to_a
         end
 
         if @game_state.exit_input?(frame_idxs)
@@ -569,10 +604,11 @@ class MainGame
 
         curr = @dc2d::get_current_ms
 
+        @game_state.update_board_for_indices(frame_idxs, @dc2d)
         # XXX: each run takes 2 to 17?
-        frame_idxs.each do |current_index|
-          @game_state.update_board_for_button_state(current_index)
-        end
+        # frame_idxs.each do |current_index|
+        #   @game_state.update_board_for_button_state(current_index)
+        # end
 
         next unless (@game_state.frame % 3) == 0
 
