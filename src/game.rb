@@ -573,6 +573,10 @@ class MainGame
       @game_state.discard_button_buffer(@dc2d)
 
       while running do
+        $profile << "doing waitvbl: #{before_wait = @dc2d::get_current_ms}"
+        @dc2d::waitvbl
+        $profile << "...#{@dc2d::get_current_ms - before_wait}.\n"
+
         current0 = @dc2d::get_current_ms
         # puts "elapsed: #{current - prev}, current: #{current}"
         $profile << "elapsed: #{current0 - prev0}\n"
@@ -605,10 +609,6 @@ class MainGame
         curr = @dc2d::get_current_ms
 
         @game_state.update_board_for_indices(frame_idxs, @dc2d)
-        # XXX: each run takes 2 to 17?
-        # frame_idxs.each do |current_index|
-        #   @game_state.update_board_for_button_state(current_index)
-        # end
 
         next unless (@game_state.frame % 3) == 0
 
@@ -657,7 +657,6 @@ class MainGame
         # puts "elapsed: #{current - prev}, current: #{current}"
         #$profile << "after frame loop... frame loop took: #{current2 - current1}\n"
 
-        @dc2d::waitvbl
         @game_state.board_state.render_if_moved(@dc2d)
       end
     end
