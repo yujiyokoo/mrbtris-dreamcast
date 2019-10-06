@@ -478,56 +478,6 @@ class GameState
     end
     $profile << ", after vert: #{ dc2d::get_current_ms - ubfi_start}\n"
   end
-
-  def check_btn_state_change(key, last_btn_state, curr_btn_state)
-    if (@cont[key] & last_btn_state) == (@cont[key] & curr_btn_state)
-      @unchanged_buttons[key] += 1
-    else
-      @unchanged_buttons[key] = 0
-    end
-  end
-
-  # XXX: typically 1 or 2 ms, occasionally 40ms
-  def update_board_for_button_state(current_index)
-    $profile << "      --- update_board started"
-    start = @screen.dc2d::get_current_ms
-    dc2d = @screen.dc2d
-
-    last_index = (current_index - 1) % BUFSIZE
-    last_btn_state = @button_states[last_index]
-    curr_btn_state = @button_states[current_index]
-
-    check_btn_state_change(:left, last_btn_state, curr_btn_state)
-    check_btn_state_change(:right, last_btn_state, curr_btn_state)
-    check_btn_state_change(:up, last_btn_state, curr_btn_state)
-    check_btn_state_change(:down, last_btn_state, curr_btn_state)
-    check_btn_state_change(:a, last_btn_state, curr_btn_state)
-    check_btn_state_change(:b, last_btn_state, curr_btn_state)
-    $profile << ", after chk btns: #{dc2d::get_current_ms - start}"
-
-    # XXX: slow part below
-    if curr_btn_state
-      unless @board_state.moved_horizontal?
-        left_input = dc2d.dpad_left?(curr_btn_state) && (@unchanged_buttons[:left] == 0 || @unchanged_buttons[:left] > 30)
-        right_input = dc2d.dpad_right?(curr_btn_state) && (@unchanged_buttons[:right] == 0 || @unchanged_buttons[:right] > 30)
-        $profile << ", after checking LR input: #{dc2d::get_current_ms - start}"
-        @board_state.move_left(dc2d) if left_input
-        @board_state.move_right if right_input
-      end
-
-      $profile << ", after LR: #{dc2d::get_current_ms - start}"
-      unless @board_state.rotated?
-        @board_state.clockwise if dc2d.btn_a?(curr_btn_state) && @unchanged_buttons[:a] == 0
-        @board_state.anticlockwise if dc2d.btn_b?(curr_btn_state) && @unchanged_buttons[:b] == 0
-      end
-      $profile << ", rotate rotate: #{dc2d::get_current_ms - start}"
-
-      unless @board_state.moved_vertical?
-        @board_state.move_down if dc2d.dpad_down?(curr_btn_state)
-      end
-    end
-    $profile << "--- update took : #{dc2d::get_current_ms - start}\n"
-  end
 end
 
 $profile = ''
