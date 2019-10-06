@@ -413,7 +413,6 @@ class GameState
     @held_buttons = {start: 0, d_left: 0, d_right: 0, d_up: 0, d_down: 0, a: 0, b: 0}
     @controller_buf_last_index = 0 # we read from last index + 1 when getting input
     @button_states = [0] * BUFSIZE
-    @last_btn_state = @button_states[0]
     @curr_button_index = 0
   end
 
@@ -444,10 +443,13 @@ class GameState
   def update_board_for_indices(frame_idxs, dc2d)
     ubfi_start = dc2d::get_current_ms
     btn_pressed = {}
+    $profile << "update_for_indices, start: #{ubfi_start}, "
+
+    input_summary = frame_idxs.reduce { |acc, v| v & acc }
 
     [:d_left, :d_right, :d_up, :d_down, :a, :b].each { |key|
-      if frame_idxs.all? { |idx| @cont[key] & @button_states[idx] == @cont[key] & @last_btn_state }
-        @held_buttons[key] += 1 if (@cont[key] & @button_states[frame_idxs[-1]]) != 0
+      if input_summary & @cont[key] != 0
+        @held_buttons[key] += 1
       else
         @held_buttons[key] = 0
         if (@cont[key] & @button_states[frame_idxs[-1]]) != 0
@@ -455,8 +457,7 @@ class GameState
         end
       end
     }
-    @last_btn_state = @button_states[frame_idxs[-1]]
-    $profile << "        update_for_indices h-check: #{ dc2d::get_current_ms - ubfi_start}, w/ #{frame_idxs.size} frames"
+    $profile << ", h-check: #{ dc2d::get_current_ms - ubfi_start}, w/ #{frame_idxs.size} frames"
 
     unless @board_state.moved_horizontal? # XXX: is this necesarry?
       left_input = btn_pressed[:d_left] || @held_buttons[:d_left] > 10
