@@ -610,6 +610,8 @@ class MainGame
 
         @game_state.update_board_for_indices(frame_idxs, @dc2d)
 
+        @game_state.board_state.render_if_moved(@dc2d)
+
         next unless (@game_state.frame % 3) == 0
 
         $profile << "  --- in frame_idx loop before saving state position: #{@dc2d::get_current_ms - curr}\n"
