@@ -435,6 +435,10 @@ class GameState
     @curr_button_index = dc2d::get_current_button_index
   end
 
+  def exit_input?(frame_idxs)
+    frame_idxs.any? { |idx| @cont[:start] & @button_states[idx] != 0 }
+  end
+
   def check_btn_state_change(key, last_btn_state, curr_btn_state)
     if (@cont[key] & last_btn_state) == (@cont[key] & curr_btn_state)
       @unchanged_buttons[key] += 1
@@ -551,12 +555,10 @@ class MainGame
           (prev_button_index..@game_state.curr_button_index)
         end
 
-        exiting = true if frame_idxs.any? { |idx|
-          if @dc2d::start_btn? @game_state.button_states[idx]
-            exiting = true
-            running = false 
-          end
-        }
+        if @game_state.exit_input?(frame_idxs)
+          exiting = true
+          running = false
+        end
 
         current1 = @dc2d::get_current_ms
         # puts "elapsed: #{current - prev}, current: #{current}"
@@ -565,58 +567,55 @@ class MainGame
 
         $profile << "right before frame_idxs loop, elapsed: #{@dc2d::get_current_ms - prev0}\n"
 
+        curr = @dc2d::get_current_ms
+
         # XXX: each run takes 2 to 17?
         frame_idxs.each do |current_index|
-          @prev_fram_idx_loop ||= 0
-          curr = @dc2d::get_current_ms
-          $profile << "--- in frame_idx loop after: #{curr - @prev_fram_idx_loop}\n"
-          @prev_fram_idx_loop = curr
-
           @game_state.update_board_for_button_state(current_index)
+        end
 
-          next unless (@game_state.frame % 3) == 0
+        next unless (@game_state.frame % 3) == 0
 
-          $profile << "  --- in frame_idx loop before saving state position: #{@dc2d::get_current_ms - curr}\n"
-          @game_state.board_state.save_current_position
+        $profile << "  --- in frame_idx loop before saving state position: #{@dc2d::get_current_ms - curr}\n"
+        @game_state.board_state.save_current_position
 
-          @game_state.tick = (@game_state.tick + 1) % @game_state.curr_wait
-          next unless @game_state.tick == 0
+        @game_state.tick = (@game_state.tick + 1) % @game_state.curr_wait
+        next unless @game_state.tick == 0
 
-          $profile << "  --- in frame_idx loop wait value check/change: #{@dc2d::get_current_ms - curr}\n"
+        $profile << "  --- in frame_idx loop wait value check/change: #{@dc2d::get_current_ms - curr}\n"
 
-          @game_state.ticks_since_wait_change += 1
-          if @game_state.ticks_since_wait_change >= 30
-            @game_state.curr_wait -= 1 unless @game_state.curr_wait == 1
-            @game_state.ticks_since_wait_change = 0
-          end
+        @game_state.ticks_since_wait_change += 1
+        if @game_state.ticks_since_wait_change >= 30
+          @game_state.curr_wait -= 1 unless @game_state.curr_wait == 1
+          @game_state.ticks_since_wait_change = 0
+        end
 
-          $profile << "  --- in frame_idx loop before checking can_drop: #{@dc2d::get_current_ms - curr}\n"
-          if @game_state.board_state.can_drop?
+        $profile << "  --- in frame_idx loop before checking can_drop: #{@dc2d::get_current_ms - curr}\n"
+        if @game_state.board_state.can_drop?
+          @game_state.board_state.move_down!
+        else
+          @game_state.board_state.save_to_board
+          @game_state.board_state.whiten_curr_pos
+          @game_state.board_state.clear_full_rows
+          @screen.draw_board(@game_state.board_state.board) # re-render whole board
+
+          $profile << "  --- in frame_idx loop after draw_board: #{@dc2d::get_current_ms - curr}\n"
+          @game_state.board_state.next_block(4, 0)
+          if !@game_state.board_state.can_drop?
+            # Stacked to the top...
+            running = false
             @game_state.board_state.move_down!
-          else
             @game_state.board_state.save_to_board
-            @game_state.board_state.whiten_curr_pos
-            @game_state.board_state.clear_full_rows
-            @screen.draw_board(@game_state.board_state.board) # re-render whole board
-
-            $profile << "  --- in frame_idx loop after draw_board: #{@dc2d::get_current_ms - curr}\n"
-            @game_state.board_state.next_block(4, 0)
-            if !@game_state.board_state.can_drop?
-              # Stacked to the top...
-              running = false
-              @game_state.board_state.move_down!
-              @game_state.board_state.save_to_board
-              @screen.draw_board(@game_state.board_state.board) # re-render whole board with finished state
-              $profile << "  --- in frame_idx loop after next block drop: #{@dc2d::get_current_ms - curr}\n"
-            end
-            @game_state.board_state.move_down!
-            $profile << "  --- in frame_idx loop after move_down!: #{@dc2d::get_current_ms - curr}\n"
-            @screen.render_upcoming_block_pane(@game_state.board_state)
-            @screen.render_score(@game_state.board_state)
-            @game_state.board_state.update_board_bitmap
-            @game_state.discard_button_buffer(@dc2d)
-            $profile << "  --- in frame_idx loop after everything: #{@dc2d::get_current_ms - curr}\n"
+            @screen.draw_board(@game_state.board_state.board) # re-render whole board with finished state
+            $profile << "  --- in frame_idx loop after next block drop: #{@dc2d::get_current_ms - curr}\n"
           end
+          @game_state.board_state.move_down!
+          $profile << "  --- in frame_idx loop after move_down!: #{@dc2d::get_current_ms - curr}\n"
+          @screen.render_upcoming_block_pane(@game_state.board_state)
+          @screen.render_score(@game_state.board_state)
+          @game_state.board_state.update_board_bitmap
+          @game_state.discard_button_buffer(@dc2d)
+          $profile << "  --- in frame_idx loop after everything: #{@dc2d::get_current_ms - curr}\n"
         end
         #current2 = @dc2d::get_current_ms
         # puts "elapsed: #{current - prev}, current: #{current}"
