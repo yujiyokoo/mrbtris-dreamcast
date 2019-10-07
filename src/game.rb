@@ -284,10 +284,7 @@ class BoardState
   # TODO: should be on Screen?
   # XXX: 0 to 10 ms per run
   def render_if_moved(dc2d)
-    #@prev_rim ||= 0
-    #curr = dc2d::get_current_ms
-    #$profile << "in ren if mv after: #{curr - @prev_rim}, "
-    #@prev_rim = curr
+    curr = dc2d::get_current_ms
     if moved? || rotated?
       erase_last_pos
       @shape[@shape_orientation].each_with_index { |row, rownum|
@@ -297,7 +294,7 @@ class BoardState
       }
       update_last_frame_block_state
     end
-    #$profile << "ren if mv took: #{dc2d::get_current_ms - curr}\n"
+    $profile << "* render took: #{dc2d::get_current_ms - curr}\n"
   end
 
   def erase_last_pos
@@ -445,7 +442,7 @@ class GameState
     btn_pressed = {}
     $profile << "update_for_indices, start: #{ubfi_start}, "
 
-    input_summary = frame_idxs.reduce { |acc, v| v & acc }
+    input_summary = frame_idxs.reduce { |acc, v| @button_states[v] & acc }
 
     [:d_left, :d_right, :d_up, :d_down, :a, :b].each { |key|
       if input_summary & @cont[key] != 0
@@ -551,8 +548,6 @@ class MainGame
           running = false
         end
 
-        curr = @dc2d::get_current_ms
-
         $profile << "before update_board_for...: #{@dc2d::get_current_ms - prev0}\n"
 
         @game_state.update_board_for_indices(frame_idxs, @dc2d)
@@ -564,13 +559,13 @@ class MainGame
 
         next unless (@game_state.frame % 3) == 0
 
-        $profile << "  --- in frame_idx loop before saving state position: #{@dc2d::get_current_ms - curr}\n"
+        $profile << "  --- in frame_idx loop before saving state position: #{@dc2d::get_current_ms - prev0}\n"
         @game_state.board_state.save_current_position
 
         @game_state.tick = (@game_state.tick + 1) % @game_state.curr_wait
         next unless @game_state.tick == 0
 
-        $profile << "  --- in frame_idx loop wait value check/change: #{@dc2d::get_current_ms - curr}\n"
+        $profile << "  --- in frame_idx loop wait value check/change: #{@dc2d::get_current_ms - prev0}\n"
 
         @game_state.ticks_since_wait_change += 1
         if @game_state.ticks_since_wait_change >= 30
@@ -578,7 +573,7 @@ class MainGame
           @game_state.ticks_since_wait_change = 0
         end
 
-        $profile << "  --- in frame_idx loop before checking can_drop: #{@dc2d::get_current_ms - curr}\n"
+        $profile << "  --- in frame_idx loop before checking can_drop: #{@dc2d::get_current_ms - prev0}\n"
         if @game_state.board_state.can_drop?
           @game_state.board_state.move_down!
         else
@@ -587,7 +582,7 @@ class MainGame
           @game_state.board_state.clear_full_rows
           @screen.draw_board(@game_state.board_state.board) # re-render whole board
 
-          $profile << "  --- in frame_idx loop after draw_board: #{@dc2d::get_current_ms - curr}\n"
+          $profile << "  --- in frame_idx loop after draw_board: #{@dc2d::get_current_ms - prev0}\n"
           @game_state.board_state.next_block(4, 0)
           if !@game_state.board_state.can_drop?
             # Stacked to the top...
@@ -595,15 +590,15 @@ class MainGame
             @game_state.board_state.move_down!
             @game_state.board_state.save_to_board
             @screen.draw_board(@game_state.board_state.board) # re-render whole board with finished state
-            $profile << "  --- in frame_idx loop after next block drop: #{@dc2d::get_current_ms - curr}\n"
+            $profile << "  --- in frame_idx loop after next block drop: #{@dc2d::get_current_ms - prev0}\n"
           end
           @game_state.board_state.move_down!
-          $profile << "  --- in frame_idx loop after move_down!: #{@dc2d::get_current_ms - curr}\n"
+          $profile << "  --- in frame_idx loop after move_down!: #{@dc2d::get_current_ms - prev0}\n"
           @screen.render_upcoming_block_pane(@game_state.board_state)
           @screen.render_score(@game_state.board_state)
           @game_state.board_state.update_board_bitmap
           @game_state.discard_button_buffer(@dc2d)
-          $profile << "  --- in frame_idx loop after everything: #{@dc2d::get_current_ms - curr}\n"
+          $profile << "  --- in frame_idx loop after everything: #{@dc2d::get_current_ms - prev0}\n"
         end
 
         @game_state.board_state.render_if_moved(@dc2d)
