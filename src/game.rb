@@ -652,6 +652,8 @@ class MainGame
           @screen.render_upcoming_block_pane(@game_state.board_state)
           @screen.render_score(@game_state.board_state)
           @game_state.board_state.update_board_bitmap
+          GC.start
+
           @game_state.discard_button_buffer(@dc2d)
           ### $profile << "  --- in frame_idx loop after everything: #{@dc2d::get_current_ms - prev0}\n"
         end
