@@ -87,6 +87,15 @@ class BoardState
     fr_idxs.size
   end
 
+  def whiten_full_rows
+    rows = full_row_idxs
+    rows.each { |r|
+      (1..10).to_a.each { |c|
+        @screen.draw_colour_square(c, r, :white, false)
+      }
+    }
+  end
+
   def save_to_board
     @shape[@shape_orientation].each_with_index { |row, rownum|
       row.each_with_index { |cell, colnum|
@@ -239,7 +248,6 @@ class BoardState
   end
 
   def render_if_moved(dc2d)
-    start_render = dc2d::get_current_ms
     four_ones = "1111".to_i(2)
     if moved? || rotated?
       # building 5x4 bits for current
@@ -483,7 +491,6 @@ class GameState
   end
 
   def update_board_for_indices(frame_idxs, dc2d)
-    ubfi_start = dc2d::get_current_ms
     @btn_pressed[:d_left] = nil
     @btn_pressed[:d_right] = nil
     @btn_pressed[:d_up] = nil
@@ -495,8 +502,6 @@ class GameState
     # this seems slightly faster than using reduce
     frame_idxs.each { |v| input_summary &= @button_states[v] }
 
-    $profile << "ubfi after reduce (#{frame_idxs.size}): #{dc2d::get_current_ms - ubfi_start}\n"
-
     [:d_left, :d_right, :d_up, :d_down, :a, :b].each { |key|
       current_key_state = @cont[key]
       if input_summary & current_key_state != 0
@@ -506,7 +511,6 @@ class GameState
         @btn_pressed[key] = (current_key_state & @button_states[frame_idxs[-1]]) != 0
       end
     }
-    $profile << "ubfi after loop: #{dc2d::get_current_ms - ubfi_start}\n"
 
     unless @board_state.moved_horizontal? # XXX: is this necesarry?
       left_input = @btn_pressed[:d_left] || @held_buttons[:d_left] > 30
@@ -514,22 +518,17 @@ class GameState
       @board_state.move_left if left_input
       @board_state.move_right if right_input
     end
-    $profile << "ubfi after horizontal: #{dc2d::get_current_ms - ubfi_start}\n"
 
     unless @board_state.rotated?
       @board_state.clockwise if @btn_pressed[:a] || @held_buttons[:a] > 30
       @board_state.anticlockwise if @btn_pressed[:b] || @held_buttons[:b] > 30
     end
-    $profile << "ubfi after rotated: #{dc2d::get_current_ms - ubfi_start}\n"
 
     unless @board_state.moved_vertical?
       @board_state.move_down if @btn_pressed[:d_down] || @held_buttons[:d_down] > 30
     end
-    $profile << "ubfi took: #{dc2d::get_current_ms - ubfi_start}\n"
   end
 end
-
-$profile = ''
 
 class MainGame
   SOLID_BOARD_BEFORE_START = ([].push [:grey] * 12) * 22
@@ -577,23 +576,15 @@ class MainGame
       @game_state.discard_button_buffer(@dc2d)
 
       while running do
-        before_wait = @dc2d::get_current_ms
-        $profile << "doing waitvbl..."
         @dc2d::waitvbl
-        $profile << "...#{@dc2d::get_current_ms - before_wait}.\n"
 
-        current0 = @dc2d::get_current_ms
-        $profile << "elapsed: #{current0 - prev0}\n"
         prev0 = current0
 
         @game_state.increment_frame
 
-        $profile << "before check button states: #{@dc2d::get_current_ms - prev0}\n"
-
         prev_button_index = @game_state.curr_button_index
         @game_state.update_button_states(@dc2d)
 
-        $profile << "before making frame indexes: #{@dc2d::get_current_ms - prev0}\n"
         frame_idxs = if prev_button_index > @game_state.curr_button_index
           (prev_button_index..(GameState::BUFSIZE-1)).to_a + (0..@game_state.curr_button_index).to_a
         else
@@ -605,24 +596,16 @@ class MainGame
           running = false
         end
 
-        $profile << "before update_board_for...: #{@dc2d::get_current_ms - prev0}\n"
-
         @game_state.update_board_for_indices(frame_idxs, @dc2d)
 
-        $profile << "before render...: #{@dc2d::get_current_ms - prev0}\n"
         @game_state.board_state.render_if_moved(@dc2d)
-
-        $profile << "before looping back: #{@dc2d::get_current_ms - prev0}\n" unless (@game_state.frame % 3) == 0
 
         next unless (@game_state.frame % 3) == 0
 
-        $profile << "  --- in frame_idx loop before saving state position: #{@dc2d::get_current_ms - prev0}\n"
         @game_state.board_state.save_current_position
 
         @game_state.tick = (@game_state.tick + 1) % @game_state.curr_wait
         next unless @game_state.tick == 0
-
-        $profile << "  --- in frame_idx loop wait value check/change: #{@dc2d::get_current_ms - prev0}\n"
 
         @game_state.ticks_since_wait_change += 1
         if @game_state.ticks_since_wait_change >= 30
@@ -630,16 +613,15 @@ class MainGame
           @game_state.ticks_since_wait_change = 0
         end
 
-        $profile << "  --- in frame_idx loop before checking can_drop: #{@dc2d::get_current_ms - prev0}\n"
         if @game_state.board_state.can_drop?
           @game_state.board_state.move_down!
         else
           @game_state.board_state.save_to_board
           @game_state.board_state.whiten_curr_pos
+          @game_state.board_state.whiten_full_rows
           @game_state.board_state.clear_full_rows
           @screen.draw_board(@game_state.board_state.board) # re-render whole board
 
-          $profile << "  --- in frame_idx loop after draw_board: #{@dc2d::get_current_ms - prev0}\n"
           @game_state.board_state.next_block(4, 0)
           @game_state.board_state.render_block
           if !@game_state.board_state.can_drop?
@@ -648,17 +630,14 @@ class MainGame
             @game_state.board_state.move_down!
             @game_state.board_state.save_to_board
             @screen.draw_board(@game_state.board_state.board) # re-render whole board with finished state
-            $profile << "  --- in frame_idx loop after next block drop: #{@dc2d::get_current_ms - prev0}\n"
           end
           @game_state.board_state.move_down!
-          $profile << "  --- in frame_idx loop after move_down!: #{@dc2d::get_current_ms - prev0}\n"
           @screen.render_upcoming_block_pane(@game_state.board_state)
           @screen.render_score(@game_state.board_state)
           @game_state.board_state.update_board_bitmap
           GC.start
 
           @game_state.discard_button_buffer(@dc2d)
-          ### $profile << "  --- in frame_idx loop after everything: #{@dc2d::get_current_ms - prev0}\n"
         end
 
         #@game_state.board_state.render_if_moved(@dc2d)
