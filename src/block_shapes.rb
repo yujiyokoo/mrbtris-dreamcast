@@ -1,6 +1,6 @@
 class BlockShapes
   def self.freeze_3_levels(x)
-    x.map { |shape| shape.map { |row| row.freeze } ; shape.freeze }
+    x.map { |shape| shape.map { |row| row.freeze }.freeze }.freeze
   end
 
   SQ = freeze_3_levels [
@@ -14,42 +14,42 @@ class BlockShapes
       [ [], [:cyan, :cyan, :cyan, :cyan], [], [] ],
       [ [false, false, :cyan, false], [false, false, :cyan, false], [false, false, :cyan, false], [false, false, :cyan, false] ],
       [ [], [], [:cyan, :cyan, :cyan, :cyan], [] ],
-      [ [false, :cyan, false, false], [false, :cyan, false, false], [false, :cyan, false, false], [false, :cyan, false, false] ]
+      [ [false, :cyan, false, false], [false, :cyan, false, false], [false, :cyan, false, false], [false, :cyan, false, false] ],
     ]
 
   L = freeze_3_levels  [
       [ [false, false, :orange, false], [:orange, :orange, :orange, false], [], [] ],
       [ [false, :orange, false, false], [false, :orange, false, false], [false, :orange, :orange, false], [] ],
       [ [], [:orange, :orange, :orange, false], [:orange, false, false, false], [] ],
-      [ [:orange, :orange, false, false], [false, :orange, false, false], [false, :orange, false, false], [] ]
+      [ [:orange, :orange, false, false], [false, :orange, false, false], [false, :orange, false, false], [] ],
     ]
 
   J = freeze_3_levels [
       [ [:blue, false, false, false], [:blue, :blue, :blue, false], [], [] ],
       [ [false, :blue, :blue, false], [false, :blue, false, false], [false, :blue, false, false], [] ],
       [ [], [:blue, :blue, :blue, false], [false, false, :blue, false], [] ],
-      [ [false, :blue, false, false], [false, :blue, false, false], [:blue, :blue, false, false], [] ]
+      [ [false, :blue, false, false], [false, :blue, false, false], [:blue, :blue, false, false], [] ],
     ]
 
   S = freeze_3_levels [
       [ [false, :green, :green, false], [:green, :green, false, false], [], [] ],
       [ [false, :green, false, false], [false, :green, :green, false], [false, false, :green, false], [] ],
       [ [], [false, :green, :green, false], [:green, :green, false, false], [] ],
-      [ [:green, false, false, false], [:green, :green, false, false], [false, :green, false, false], [] ]
+      [ [:green, false, false, false], [:green, :green, false, false], [false, :green, false, false], [] ],
     ]
 
   Z = freeze_3_levels [
       [ [:red, :red, false, false], [false, :red, :red, false], [], [] ],
       [ [false, false, :red, false], [false, :red, :red, false], [false, :red, false, false], [] ],
       [ [], [:red, :red, false, false], [false, :red, :red, false], [] ],
-      [ [false, :red, false, false], [:red, :red, false, false], [:red, false, false, false], [] ]
+      [ [false, :red, false, false], [:red, :red, false, false], [:red, false, false, false], [] ],
     ]
 
   T = freeze_3_levels [
       [ [false, :purple, false, false], [:purple, :purple, :purple, false], [], [] ],
       [ [false, :purple, false, false], [false, :purple, :purple, false], [false, :purple, false, false], [] ],
       [ [], [:purple, :purple, :purple, false], [false, :purple, false, false], [] ],
-      [ [false, :purple, false, false], [:purple, :purple, false, false], [false, :purple, false, false], [] ]
+      [ [false, :purple, false, false], [:purple, :purple, false, false], [false, :purple, false, false], [] ],
     ]
 
   def self.colour_to_rgb(colour)

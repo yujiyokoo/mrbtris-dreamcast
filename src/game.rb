@@ -19,6 +19,8 @@ class BoardState
     build_shape_bitmaps
   end
 
+  SHAPE_COLOURS = {sq: :yellow, i: :cyan, l: :orange, j: :blue, s: :green, z: :red, t: :purple}.freeze
+
   LEFT_AND_RIGHT_BLOCKS = ([:grey] + [false] * 10 + [:grey]).freeze
   HORIZONTAL_WALL = ([:grey]*12).freeze
   BELOW_BOTTOM = ([false] * 12).freeze
@@ -273,79 +275,77 @@ class BoardState
       @move_left_adjust = (moved_left ? 1 : 0)
 
       # erase squares without looping
-      erase_cell(24, -1, -1, dc2d) if (@to_erase >> 24) & 1 ==1
-      erase_cell(23, 0, -1, dc2d) if (@to_erase >> 23) & 1 ==1
-      erase_cell(22, 1, -1, dc2d) if (@to_erase >> 22) & 1 ==1
-      erase_cell(21, 2, -1, dc2d) if (@to_erase >> 21) & 1 ==1
-      erase_cell(20, 3, -1, dc2d) if (@to_erase >> 20) & 1 ==1
-      erase_cell(19, -1, 0, dc2d) if (@to_erase >> 19) & 1 ==1
-      erase_cell(18, 0, 0, dc2d) if (@to_erase >> 18) & 1 ==1
-      erase_cell(17, 1, 0, dc2d) if (@to_erase >> 17) & 1 ==1
-      erase_cell(16, 2, 0, dc2d) if (@to_erase >> 16) & 1 ==1
-      erase_cell(15, 3, 0, dc2d) if (@to_erase >> 15) & 1 ==1
-      erase_cell(14, -1, 1, dc2d) if (@to_erase >> 14) & 1 ==1
-      erase_cell(13, 0, 1, dc2d) if (@to_erase >> 13) & 1 ==1
-      erase_cell(12, 1, 1, dc2d) if (@to_erase >> 12) & 1 ==1
-      erase_cell(11, 2, 1, dc2d) if (@to_erase >> 11) & 1 ==1
-      erase_cell(10, 3, 1, dc2d) if (@to_erase >> 10) & 1 ==1
-      erase_cell(9, -1, 2, dc2d) if (@to_erase >> 9) & 1 ==1
-      erase_cell(8, 0, 2, dc2d) if (@to_erase >> 8) & 1 ==1
-      erase_cell(7, 1, 2, dc2d) if (@to_erase >> 7) & 1 ==1
-      erase_cell(6, 2, 2, dc2d) if (@to_erase >> 6) & 1 ==1
-      erase_cell(5, 3, 2, dc2d) if (@to_erase >> 5) & 1 ==1
-      erase_cell(4, -1, 3, dc2d) if (@to_erase >> 4) & 1 ==1
-      erase_cell(3, 0, 3, dc2d) if (@to_erase >> 3) & 1 ==1
-      erase_cell(2, 1, 3, dc2d) if (@to_erase >> 2) & 1 ==1
-      erase_cell(1, 2, 3, dc2d) if (@to_erase >> 1) & 1 ==1
-      erase_cell(0, 3, 3, dc2d) if @to_erase & 1 ==1
+      erase_cell(24, -1, -1) if (@to_erase >> 24) & 1 ==1
+      erase_cell(23, 0, -1) if (@to_erase >> 23) & 1 ==1
+      erase_cell(22, 1, -1) if (@to_erase >> 22) & 1 ==1
+      erase_cell(21, 2, -1) if (@to_erase >> 21) & 1 ==1
+      erase_cell(20, 3, -1) if (@to_erase >> 20) & 1 ==1
+      erase_cell(19, -1, 0) if (@to_erase >> 19) & 1 ==1
+      erase_cell(18, 0, 0) if (@to_erase >> 18) & 1 ==1
+      erase_cell(17, 1, 0) if (@to_erase >> 17) & 1 ==1
+      erase_cell(16, 2, 0) if (@to_erase >> 16) & 1 ==1
+      erase_cell(15, 3, 0) if (@to_erase >> 15) & 1 ==1
+      erase_cell(14, -1, 1) if (@to_erase >> 14) & 1 ==1
+      erase_cell(13, 0, 1) if (@to_erase >> 13) & 1 ==1
+      erase_cell(12, 1, 1) if (@to_erase >> 12) & 1 ==1
+      erase_cell(11, 2, 1) if (@to_erase >> 11) & 1 ==1
+      erase_cell(10, 3, 1) if (@to_erase >> 10) & 1 ==1
+      erase_cell(9, -1, 2) if (@to_erase >> 9) & 1 ==1
+      erase_cell(8, 0, 2) if (@to_erase >> 8) & 1 ==1
+      erase_cell(7, 1, 2) if (@to_erase >> 7) & 1 ==1
+      erase_cell(6, 2, 2) if (@to_erase >> 6) & 1 ==1
+      erase_cell(5, 3, 2) if (@to_erase >> 5) & 1 ==1
+      erase_cell(4, -1, 3) if (@to_erase >> 4) & 1 ==1
+      erase_cell(3, 0, 3) if (@to_erase >> 3) & 1 ==1
+      erase_cell(2, 1, 3) if (@to_erase >> 2) & 1 ==1
+      erase_cell(1, 2, 3) if (@to_erase >> 1) & 1 ==1
+      erase_cell(0, 3, 3) if @to_erase & 1 ==1
 
       # draw cells without looping
-      draw_cell(24, -1, -1, dc2d) if (@to_draw >> 24) & 1 ==1
-      draw_cell(23, 0, -1, dc2d) if (@to_draw >> 23) & 1 ==1
-      draw_cell(22, 1, -1, dc2d) if (@to_draw >> 22) & 1 ==1
-      draw_cell(21, 2, -1, dc2d) if (@to_draw >> 21) & 1 ==1
-      draw_cell(20, 3, -1, dc2d) if (@to_draw >> 20) & 1 ==1
-      draw_cell(19, -1, 0, dc2d) if (@to_draw >> 19) & 1 ==1
-      draw_cell(18, 0, 0, dc2d) if (@to_draw >> 18) & 1 ==1
-      draw_cell(17, 1, 0, dc2d) if (@to_draw >> 17) & 1 ==1
-      draw_cell(16, 2, 0, dc2d) if (@to_draw >> 16) & 1 ==1
-      draw_cell(15, 3, 0, dc2d) if (@to_draw >> 15) & 1 ==1
-      draw_cell(14, -1, 1, dc2d) if (@to_draw >> 14) & 1 ==1
-      draw_cell(13, 0, 1, dc2d) if (@to_draw >> 13) & 1 ==1
-      draw_cell(12, 1, 1, dc2d) if (@to_draw >> 12) & 1 ==1
-      draw_cell(11, 2, 1, dc2d) if (@to_draw >> 11) & 1 ==1
-      draw_cell(10, 3, 1, dc2d) if (@to_draw >> 10) & 1 ==1
-      draw_cell(9, -1, 2, dc2d) if (@to_draw >> 9) & 1 ==1
-      draw_cell(8, 0, 2, dc2d) if (@to_draw >> 8) & 1 ==1
-      draw_cell(7, 1, 2, dc2d) if (@to_draw >> 7) & 1 ==1
-      draw_cell(6, 2, 2, dc2d) if (@to_draw >> 6) & 1 ==1
-      draw_cell(5, 3, 2, dc2d) if (@to_draw >> 5) & 1 ==1
-      draw_cell(4, -1, 3, dc2d) if (@to_draw >> 4) & 1 ==1
-      draw_cell(3, 0, 3, dc2d) if (@to_draw >> 3) & 1 ==1
-      draw_cell(2, 1, 3, dc2d) if (@to_draw >> 2) & 1 ==1
-      draw_cell(1, 2, 3, dc2d) if (@to_draw >> 1) & 1 ==1
-      draw_cell(0, 3, 3, dc2d) if @to_draw & 1 ==1
+      draw_cell(24, -1, -1) if (@to_draw >> 24) & 1 ==1
+      draw_cell(23, 0, -1) if (@to_draw >> 23) & 1 ==1
+      draw_cell(22, 1, -1) if (@to_draw >> 22) & 1 ==1
+      draw_cell(21, 2, -1) if (@to_draw >> 21) & 1 ==1
+      draw_cell(20, 3, -1) if (@to_draw >> 20) & 1 ==1
+      draw_cell(19, -1, 0) if (@to_draw >> 19) & 1 ==1
+      draw_cell(18, 0, 0) if (@to_draw >> 18) & 1 ==1
+      draw_cell(17, 1, 0) if (@to_draw >> 17) & 1 ==1
+      draw_cell(16, 2, 0) if (@to_draw >> 16) & 1 ==1
+      draw_cell(15, 3, 0) if (@to_draw >> 15) & 1 ==1
+      draw_cell(14, -1, 1) if (@to_draw >> 14) & 1 ==1
+      draw_cell(13, 0, 1) if (@to_draw >> 13) & 1 ==1
+      draw_cell(12, 1, 1) if (@to_draw >> 12) & 1 ==1
+      draw_cell(11, 2, 1) if (@to_draw >> 11) & 1 ==1
+      draw_cell(10, 3, 1) if (@to_draw >> 10) & 1 ==1
+      draw_cell(9, -1, 2) if (@to_draw >> 9) & 1 ==1
+      draw_cell(8, 0, 2) if (@to_draw >> 8) & 1 ==1
+      draw_cell(7, 1, 2) if (@to_draw >> 7) & 1 ==1
+      draw_cell(6, 2, 2) if (@to_draw >> 6) & 1 ==1
+      draw_cell(5, 3, 2) if (@to_draw >> 5) & 1 ==1
+      draw_cell(4, -1, 3) if (@to_draw >> 4) & 1 ==1
+      draw_cell(3, 0, 3) if (@to_draw >> 3) & 1 ==1
+      draw_cell(2, 1, 3) if (@to_draw >> 2) & 1 ==1
+      draw_cell(1, 2, 3) if (@to_draw >> 1) & 1 ==1
+      draw_cell(0, 3, 3) if @to_draw & 1 ==1
 
       update_last_frame_block_state
     end
   end
 
-  def erase_cell(idx, x_, y, dc2d)
+  def erase_cell(idx, x_, y)
     x = x_ + @move_left_adjust
-    draw_start = dc2d::get_current_ms
     @screen.draw_black_square(@x+x, @y+y, false)
   end
 
-  def draw_cell(idx, x_, y, dc2d)
+  def draw_cell(idx, x_, y)
     x = x_ + @move_left_adjust
-    erase_start = dc2d::get_current_ms
-    @screen.draw_colour_square(@x+x, @y+y, :green, false)
+    @screen.draw_colour_square(@x+x, @y+y, SHAPE_COLOURS[@shape_name], false)
   end
 
   def render_block
     @shape[@shape_orientation].each_with_index { |row, rownum|
       row.each_with_index { |cell, colnum|
-        @screen.draw_colour_square(@x+colnum, @y+rownum, cell, false) if cell
+        @screen.draw_colour_square(@x+colnum, @y+rownum, SHAPE_COLOURS[@shape_name], false) if cell
       }
     }
   end
