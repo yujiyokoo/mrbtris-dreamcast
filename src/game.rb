@@ -31,6 +31,8 @@ class BoardState
       [ BELOW_BOTTOM, BELOW_BOTTOM ] # 2 lines below bottom border for easier processing
     ).freeze
 
+  FOUR_ONES = "1111".to_i(2).freeze
+
   def new_empty_board
     new_board = Array.new
 
@@ -111,18 +113,19 @@ class BoardState
     if x < 0 ; 0 ; else ; x ; end
   end
 
+  ROW_OFFSETS = [12, 8, 4, 0].freeze
   def board_section_for(x, y, horizontal_shift, vertical_shift)
     left = x + horizontal_shift
     top = y + vertical_shift
-    four_ones = "1111".to_i(2)
-    rows = @board_bitmap[top..top+3].map { |row|
+    bitmap = 0
+    shift = 0
+    [0, 1, 2, 3].each { |idx|
       # board is 12 x 22
-      # maks (four_ones) is 1111, shifting 8 gets them to 0-3 from left
+      # mask (four_ones) is 1111, shifting 8 gets them to 0-3 from left
       shift = 8 - left
-      (row & (four_ones << shift)) >> shift
+      bitmap |= (@board_bitmap[top+idx] & (FOUR_ONES << shift)) >> (shift - ROW_OFFSETS[idx])
     }
-
-    (rows[0] << 12) | (rows[1] << 8) | (rows[2] << 4) | rows[3]
+    bitmap
   end
 
   private
@@ -175,22 +178,16 @@ class BoardState
     !collides?(board_section, previous_shape)
   end
 
-  def move_left(dc2d)
-    @x -= 1 if can_go_left?(dc2d)
+  def move_left
+    @x -= 1 if can_go_left?
   end
 
-  def can_go_left?(dc2d)
-    cgl_start = dc2d::get_current_ms
+  def can_go_left?
     board_section = board_section_for(@x, @y, -1, 0)
-    #$profile << "--- after bord_section_for: #{dc2d::get_current_ms - cgl_start}\n"
-    collides = !collides?(board_section, @shape_bitmaps[@shape_name][@shape_orientation], dc2d)
-    #$profile << "--- after collides check buttons: #{dc2d::get_current_ms - cgl_start}\n"
-    collides
+    !collides?(board_section, @shape_bitmaps[@shape_name][@shape_orientation])
   end
 
-  def collides?(board_section, block_bitmap, dc2d = nil)
-    col_start = dc2d::get_current_ms(dc2d) unless dc2d.nil?
-
+  def collides?(board_section, block_bitmap)
     (board_section & block_bitmap) != 0
   end
 
@@ -213,7 +210,8 @@ class BoardState
 
   def can_drop?
     board_section = board_section_for(@x, @y, 0, 1)
-    !collides?(board_section, @shape_bitmaps[@shape_name][@shape_orientation])
+    result = !collides?(board_section, @shape_bitmaps[@shape_name][@shape_orientation])
+    result
   end
 
   def save_current_position
@@ -242,24 +240,20 @@ class BoardState
     start_render = dc2d::get_current_ms
     four_ones = "1111".to_i(2)
     if moved? || rotated?
-#add 0 to left for each
+      # building 5x4 bits for current
       block_bitmap = @shape_bitmaps[@shape_name][@shape_orientation]
       current_block = (block_bitmap & four_ones) |
         (block_bitmap & (four_ones << 4)) << 1 |
         (block_bitmap & (four_ones << 8)) << 2 |
         (block_bitmap & (four_ones << 12)) << 3
 
-      $profile << "current_block: %025d, %dms" % [current_block, (dc2d::get_current_ms - start_render)]
-
+      # building 5x4 bits for previous block position / orientation
       prev_bitmap = @shape_bitmaps[@shape_name][@last_rendered_block_state[:orientation]]
       prev_block = (prev_bitmap & four_ones) |
         (prev_bitmap & (four_ones << 4)) << 1 |
         (prev_bitmap & (four_ones << 8)) << 2 |
         (prev_bitmap & (four_ones << 12)) << 3
 
-      $profile << "prev_block: %025d, %dms" % [prev_block, (dc2d::get_current_ms - start_render)]
-
-      horizontal_adjust = 0
       moved_right = @x > @last_rendered_block_state[:x] # block moved right
       moved_left = @x < @last_rendered_block_state[:x] # block moved left
 
@@ -268,61 +262,84 @@ class BoardState
       elsif moved_left
         current_block <<= 1 # shift current block to left
       end
-
-      $profile << "current_block: %025d, prev_block: %025d, %dms" % [current_block, prev_block, (dc2d::get_current_ms - start_render)]
-
       moved_down = @y > @last_rendered_block_state[:y] # block moved down
       if moved_down
         prev_block <<= 5 # move previous up 1 row
       end
 
-      to_erase = (prev_block ^ current_block) & prev_block
-      to_draw = (prev_block ^ current_block) & current_block
+      @to_erase = (prev_block ^ current_block) & prev_block
+      @to_draw = (prev_block ^ current_block) & current_block
 
-      $profile << "to_erase: %025d, to_draw: %025d, %dms" % [to_erase, to_draw, (dc2d::get_current_ms - start_render)]
+      @move_left_adjust = (moved_left ? 1 : 0)
 
-      #indices = [24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
-      indices = (0..24).to_a.reverse
-      indices.each { |idx|
-        if (to_erase >> idx) & 1 == 1
-          y = (idx / 5) - 1 # -1 as current block is always from 2nd row, prev could be from 1st or 2nd
-          x = 4 - (idx % 5) - (moved_right ? -1 : 0)
-          @screen.draw_black_square(@last_rendered_block_state[:x]+x, @last_rendered_block_state[:y]+y, false)
-        end
+      # erase squares without looping
+      erase_cell(24, -1, -1, dc2d) if (@to_erase >> 24) & 1 ==1
+      erase_cell(23, 0, -1, dc2d) if (@to_erase >> 23) & 1 ==1
+      erase_cell(22, 1, -1, dc2d) if (@to_erase >> 22) & 1 ==1
+      erase_cell(21, 2, -1, dc2d) if (@to_erase >> 21) & 1 ==1
+      erase_cell(20, 3, -1, dc2d) if (@to_erase >> 20) & 1 ==1
+      erase_cell(19, -1, 0, dc2d) if (@to_erase >> 19) & 1 ==1
+      erase_cell(18, 0, 0, dc2d) if (@to_erase >> 18) & 1 ==1
+      erase_cell(17, 1, 0, dc2d) if (@to_erase >> 17) & 1 ==1
+      erase_cell(16, 2, 0, dc2d) if (@to_erase >> 16) & 1 ==1
+      erase_cell(15, 3, 0, dc2d) if (@to_erase >> 15) & 1 ==1
+      erase_cell(14, -1, 1, dc2d) if (@to_erase >> 14) & 1 ==1
+      erase_cell(13, 0, 1, dc2d) if (@to_erase >> 13) & 1 ==1
+      erase_cell(12, 1, 1, dc2d) if (@to_erase >> 12) & 1 ==1
+      erase_cell(11, 2, 1, dc2d) if (@to_erase >> 11) & 1 ==1
+      erase_cell(10, 3, 1, dc2d) if (@to_erase >> 10) & 1 ==1
+      erase_cell(9, -1, 2, dc2d) if (@to_erase >> 9) & 1 ==1
+      erase_cell(8, 0, 2, dc2d) if (@to_erase >> 8) & 1 ==1
+      erase_cell(7, 1, 2, dc2d) if (@to_erase >> 7) & 1 ==1
+      erase_cell(6, 2, 2, dc2d) if (@to_erase >> 6) & 1 ==1
+      erase_cell(5, 3, 2, dc2d) if (@to_erase >> 5) & 1 ==1
+      erase_cell(4, -1, 3, dc2d) if (@to_erase >> 4) & 1 ==1
+      erase_cell(3, 0, 3, dc2d) if (@to_erase >> 3) & 1 ==1
+      erase_cell(2, 1, 3, dc2d) if (@to_erase >> 2) & 1 ==1
+      erase_cell(1, 2, 3, dc2d) if (@to_erase >> 1) & 1 ==1
+      erase_cell(0, 3, 3, dc2d) if @to_erase & 1 ==1
 
-        if (to_draw >> idx) & 1 == 1
-          y = (idx / 5) - 1 # -1 as current block is always from 2nd row, prev could be from 1st or 2nd
-          x = 4 - (idx % 5) - (moved_left ? -1 : 0)
-          @screen.draw_colour_square(@x+x, @y+y, :green, false)
-        end
-      }
+      # draw cells without looping
+      draw_cell(24, -1, -1, dc2d) if (@to_draw >> 24) & 1 ==1
+      draw_cell(23, 0, -1, dc2d) if (@to_draw >> 23) & 1 ==1
+      draw_cell(22, 1, -1, dc2d) if (@to_draw >> 22) & 1 ==1
+      draw_cell(21, 2, -1, dc2d) if (@to_draw >> 21) & 1 ==1
+      draw_cell(20, 3, -1, dc2d) if (@to_draw >> 20) & 1 ==1
+      draw_cell(19, -1, 0, dc2d) if (@to_draw >> 19) & 1 ==1
+      draw_cell(18, 0, 0, dc2d) if (@to_draw >> 18) & 1 ==1
+      draw_cell(17, 1, 0, dc2d) if (@to_draw >> 17) & 1 ==1
+      draw_cell(16, 2, 0, dc2d) if (@to_draw >> 16) & 1 ==1
+      draw_cell(15, 3, 0, dc2d) if (@to_draw >> 15) & 1 ==1
+      draw_cell(14, -1, 1, dc2d) if (@to_draw >> 14) & 1 ==1
+      draw_cell(13, 0, 1, dc2d) if (@to_draw >> 13) & 1 ==1
+      draw_cell(12, 1, 1, dc2d) if (@to_draw >> 12) & 1 ==1
+      draw_cell(11, 2, 1, dc2d) if (@to_draw >> 11) & 1 ==1
+      draw_cell(10, 3, 1, dc2d) if (@to_draw >> 10) & 1 ==1
+      draw_cell(9, -1, 2, dc2d) if (@to_draw >> 9) & 1 ==1
+      draw_cell(8, 0, 2, dc2d) if (@to_draw >> 8) & 1 ==1
+      draw_cell(7, 1, 2, dc2d) if (@to_draw >> 7) & 1 ==1
+      draw_cell(6, 2, 2, dc2d) if (@to_draw >> 6) & 1 ==1
+      draw_cell(5, 3, 2, dc2d) if (@to_draw >> 5) & 1 ==1
+      draw_cell(4, -1, 3, dc2d) if (@to_draw >> 4) & 1 ==1
+      draw_cell(3, 0, 3, dc2d) if (@to_draw >> 3) & 1 ==1
+      draw_cell(2, 1, 3, dc2d) if (@to_draw >> 2) & 1 ==1
+      draw_cell(1, 2, 3, dc2d) if (@to_draw >> 1) & 1 ==1
+      draw_cell(0, 3, 3, dc2d) if @to_draw & 1 ==1
 
-    end
-  end
-
-  # TODO: should be on Screen?
-  # XXX: 0 to 10 ms per run
-  def old_render_if_moved(dc2d)
-    curr = dc2d::get_current_ms
-    if moved? || rotated?
-      erase_last_pos
-      @shape[@shape_orientation].each_with_index { |row, rownum|
-        row.each_with_index { |cell, colnum|
-          @screen.draw_colour_square(@x+colnum, @y+rownum, cell, false) if cell
-        }
-      }
       update_last_frame_block_state
     end
-    $profile << "* render took: #{dc2d::get_current_ms - curr}\n"
   end
 
-  def erase_last_pos
-    # p @last_rendered_block_state
-    @shape[@last_rendered_block_state[:orientation]].each_with_index { |row, rownum|
-      row.each_with_index { |cell, colnum|
-        @screen.draw_black_square(@last_rendered_block_state[:x]+colnum, @last_rendered_block_state[:y]+rownum, false) if cell && cell != @shape[@shape_orientation]
-      }
-    }
+  def erase_cell(idx, x_, y, dc2d)
+    x = x_ + @move_left_adjust
+    draw_start = dc2d::get_current_ms
+    @screen.draw_black_square(@x+x, @y+y, false)
+  end
+
+  def draw_cell(idx, x_, y, dc2d)
+    x = x_ + @move_left_adjust
+    erase_start = dc2d::get_current_ms
+    @screen.draw_colour_square(@x+x, @y+y, :green, false)
   end
 
   def render_block
@@ -331,51 +348,6 @@ class BoardState
         @screen.draw_colour_square(@x+colnum, @y+rownum, cell, false) if cell
       }
     }
-  end
-
-  def slow_render_if_moved(dc2d)
-    curr = dc2d::get_current_ms
-    if moved? || rotated?
-      start_render_x = @x
-      start_render_y = @y
-      adjusted_block = block = @shape[@shape_orientation]
-      adjusted_last_block = last_block = @shape[@last_rendered_block_state[:orientation]]
-      $profile << "   ren if mov before chk x: #{dc2d::get_current_ms - curr}\n"
-      if @last_rendered_block_state[:x] < @x
-        start_render_x = x - 1
-        adjusted_block = block.map { |row|
-          [false] + row
-        }
-      elsif @last_rendered_block_state[:x] > @x
-        adjusted_last_block = last_block.map { |row|
-          [false] + row
-        }
-      end
-      $profile << "   ren if mov before chk y: #{dc2d::get_current_ms - curr}\n"
-
-      if @last_rendered_block_state[:y] < @y
-        puts "dropping"
-        start_render_y = y - 1
-        adjusted_block = [[]] + adjusted_block
-      end
-
-      $profile << "   ren if mov before big loop: #{dc2d::get_current_ms - curr}\n"
-      (0..4).each { |rownum|
-        (0..4).each { |colnum|
-          cell = Array(adjusted_block[rownum])[colnum]
-          if !!cell == !!Array(adjusted_last_block[rownum])[colnum]
-          elsif cell
-            @screen.draw_colour_square(start_render_x+colnum, start_render_y+rownum, cell, false)
-          else
-            @screen.draw_black_square(start_render_x+colnum, start_render_y+rownum, false)
-          end
-        }
-        $profile << "   doing outer big loop: #{dc2d::get_current_ms - curr}\n"
-      }
-      update_last_frame_block_state
-      $profile << "   ren if mov almost done: #{dc2d::get_current_ms - curr}\n"
-    end
-    $profile << "* render took: #{dc2d::get_current_ms - curr}\n"
   end
 
   def whiten_curr_pos
@@ -483,6 +455,7 @@ class GameState
     @controller_buf_last_index = 0 # we read from last index + 1 when getting input
     @button_states = [0] * BUFSIZE
     @curr_button_index = 0
+    @btn_pressed = {left: nil, right: nil, up: nil, down: nil, a: nil, b: nil}
   end
 
   def last_rendered_block_state=(block_state)
@@ -511,41 +484,48 @@ class GameState
 
   def update_board_for_indices(frame_idxs, dc2d)
     ubfi_start = dc2d::get_current_ms
-    btn_pressed = {}
-    ### $profile << "update_for_indices, start: #{ubfi_start}, "
+    @btn_pressed[:d_left] = nil
+    @btn_pressed[:d_right] = nil
+    @btn_pressed[:d_up] = nil
+    @btn_pressed[:d_down] = nil
+    @btn_pressed[:a] = nil
+    @btn_pressed[:b] = nil
 
-    input_summary = frame_idxs.reduce { |acc, v| @button_states[v] & acc }
+    input_summary = 0
+    # this seems slightly faster than using reduce
+    frame_idxs.each { |v| input_summary &= @button_states[v] }
+
+    $profile << "ubfi after reduce (#{frame_idxs.size}): #{dc2d::get_current_ms - ubfi_start}\n"
 
     [:d_left, :d_right, :d_up, :d_down, :a, :b].each { |key|
-      if input_summary & @cont[key] != 0
+      current_key_state = @cont[key]
+      if input_summary & current_key_state != 0
         @held_buttons[key] += 1
       else
         @held_buttons[key] = 0
-        if (@cont[key] & @button_states[frame_idxs[-1]]) != 0
-          btn_pressed[key] = true
-        end
+        @btn_pressed[key] = (current_key_state & @button_states[frame_idxs[-1]]) != 0
       end
     }
-    ### $profile << ", h-check: #{ dc2d::get_current_ms - ubfi_start}, w/ #{frame_idxs.size} frames"
+    $profile << "ubfi after loop: #{dc2d::get_current_ms - ubfi_start}\n"
 
     unless @board_state.moved_horizontal? # XXX: is this necesarry?
-      left_input = btn_pressed[:d_left] || @held_buttons[:d_left] > 10
-      right_input = btn_pressed[:d_right] || @held_buttons[:d_right] > 10
-      @board_state.move_left(dc2d) if left_input
+      left_input = @btn_pressed[:d_left] || @held_buttons[:d_left] > 30
+      right_input = @btn_pressed[:d_right] || @held_buttons[:d_right] > 30
+      @board_state.move_left if left_input
       @board_state.move_right if right_input
     end
-    ### $profile << ", after horz: #{ dc2d::get_current_ms - ubfi_start}"
+    $profile << "ubfi after horizontal: #{dc2d::get_current_ms - ubfi_start}\n"
 
     unless @board_state.rotated?
-      @board_state.clockwise if btn_pressed[:a] || @held_buttons[:a] > 10
-      @board_state.anticlockwise if btn_pressed[:b] || @held_buttons[:b] > 10
+      @board_state.clockwise if @btn_pressed[:a] || @held_buttons[:a] > 30
+      @board_state.anticlockwise if @btn_pressed[:b] || @held_buttons[:b] > 30
     end
-    ### $profile << ", after rot: #{ dc2d::get_current_ms - ubfi_start}"
+    $profile << "ubfi after rotated: #{dc2d::get_current_ms - ubfi_start}\n"
 
     unless @board_state.moved_vertical?
-      @board_state.move_down if btn_pressed[:d_down] || @held_buttons[:d_down] > 10
+      @board_state.move_down if @btn_pressed[:d_down] || @held_buttons[:d_down] > 30
     end
-    ### $profile << ", after vert: #{ dc2d::get_current_ms - ubfi_start}\n"
+    $profile << "ubfi took: #{dc2d::get_current_ms - ubfi_start}\n"
   end
 end
 
@@ -608,9 +588,12 @@ class MainGame
 
         @game_state.increment_frame
 
+        $profile << "before check button states: #{@dc2d::get_current_ms - prev0}\n"
+
         prev_button_index = @game_state.curr_button_index
         @game_state.update_button_states(@dc2d)
 
+        $profile << "before making frame indexes: #{@dc2d::get_current_ms - prev0}\n"
         frame_idxs = if prev_button_index > @game_state.curr_button_index
           (prev_button_index..(GameState::BUFSIZE-1)).to_a + (0..@game_state.curr_button_index).to_a
         else
