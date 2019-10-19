@@ -549,7 +549,7 @@ class MainGame
   end
 
   def main_loop
-    @dc2d::clear_score(@score)
+    @dc2d::clear_score()
 
     @screen.draw_board(SOLID_BOARD_BEFORE_START)
 
