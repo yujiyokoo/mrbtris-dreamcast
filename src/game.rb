@@ -498,7 +498,7 @@ class GameState
     @btn_pressed[:a] = nil
     @btn_pressed[:b] = nil
 
-    input_summary = 0
+    input_summary = 65535 # 16-bits of 1s
     # this seems slightly faster than using reduce
     frame_idxs.each { |v| input_summary &= @button_states[v] }
 
@@ -512,20 +512,16 @@ class GameState
       end
     }
 
-    unless @board_state.moved_horizontal? # XXX: is this necesarry?
-      left_input = @btn_pressed[:d_left] || @held_buttons[:d_left] > 30
-      right_input = @btn_pressed[:d_right] || @held_buttons[:d_right] > 30
-      @board_state.move_left if left_input
-      @board_state.move_right if right_input
-    end
+    left_input = @btn_pressed[:d_left] || @held_buttons[:d_left] > 15
+    right_input = @btn_pressed[:d_right] || @held_buttons[:d_right] > 15
+    @board_state.move_left if left_input
+    @board_state.move_right if right_input
 
-    unless @board_state.rotated?
-      @board_state.clockwise if @btn_pressed[:a] || @held_buttons[:a] > 30
-      @board_state.anticlockwise if @btn_pressed[:b] || @held_buttons[:b] > 30
-    end
+    @board_state.clockwise if @btn_pressed[:a]
+    @board_state.anticlockwise if @btn_pressed[:b]
 
     unless @board_state.moved_vertical?
-      @board_state.move_down if @btn_pressed[:d_down] || @held_buttons[:d_down] > 30
+      @board_state.move_down if @btn_pressed[:d_down] || @held_buttons[:d_down] > 15
     end
   end
 end
