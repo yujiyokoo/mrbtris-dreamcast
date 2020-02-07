@@ -16,16 +16,14 @@ Please get the mruby-dreamcast environment set up.
 
 == Build
 
-_Please refer to the mruby-dreamcast for setting up your environment!_
-
-If everything is set up as per README on mruby-dreamcast,
+You need to have Docker installed to build this.
+It uses the image from https://hub.docker.com/r/yujiyokoo/mruby-kos-dc which is built from https://gitlab.com/yujiyokoo/docker-mruby-kos-dc
 
 ----
-> cd /vagrant/src
 > git clone https://gitlab.com/yujiyokoo/mrbtris-dreamcast.git
 > cd mrbtris-dreamcast
-> . /opt/toolchains/dc/kos/environ.sh
-> make
+> docker pull yujiyokoo/mruby-kos-dc
+> docker run -i -t -v $(pwd):/mnt yujiyokoo/mruby-kos-dc bash -c 'cd /mnt && . /opt/toolchains/dc/kos/environ.sh && make'
 ----
 
 should produce an elf binary (called `mrbtris.elf`).
@@ -51,7 +49,3 @@ One easy method is to use programs like Bootdreams that can take care of self-bo
 * Make an mrbgem for the Dreamcast specific things
 * Unit tests
 * Use more Dreamcast features
-
-== Licence
-
-This project is licenced under the MIT licence.
