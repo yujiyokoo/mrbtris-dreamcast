@@ -9,7 +9,10 @@ MRB_BYTECODE = src/game.c
 
 KOS_ROMDISK_DIR = romdisk
 
-CFLAGS = -I/vagrant/src/mruby-sh4/include/ -L/vagrant/src/mruby-sh4/build/host/lib/
+MRB_ROOT = /usr/src/mruby-host
+MRB_SH4_ROOT = /usr/src/mruby-sh4
+
+CFLAGS = -I$(MRB_SH4_ROOT)/include/ -L$(MRB_SH4_ROOT)/build/host/lib/
 
 all: rm-elf $(TARGET)
 
@@ -25,7 +28,7 @@ $(TARGET): $(OBJS) $(MRB_BYTECODE)
 	kos-cc $(CFLAGS) -o $(TARGET) $(OBJS) -lmruby -lmruby_core -lm
 
 $(MRB_BYTECODE): src/start_game.rb src/game.rb
-	/vagrant/src/mruby-host/bin/mrbc -g -Bgame -o src/game.c $(MRB_SOURCES)
+	$(MRB_ROOT)/bin/mrbc -g -Bgame -o src/game.c $(MRB_SOURCES)
 
 run: $(TARGET)
 	$(KOS_LOADER) $(TARGET)
