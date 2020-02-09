@@ -16,8 +16,11 @@ class BoardState
     @shape_orientation, @last_shape_orientation = 0, 0
     @last_rendered_block_state = { x: x, y: y, orientation: 0 }
     @score = 0
+    @lock_delay = LOCK_DELAY
     build_shape_bitmaps
   end
+
+  LOCK_DELAY = 30
 
   SHAPE_COLOURS = {sq: :yellow, i: :cyan, l: :orange, j: :blue, s: :green, z: :red, t: :purple}.freeze
 
@@ -189,8 +192,15 @@ class BoardState
     !collides?(board_section, previous_shape)
   end
 
+  def decrement_lock_deloy
+    @lock_delay -= 1
+  end
+
   def move_left
-    @x -= 1 if can_go_left?
+    if can_go_left?
+      @lock_delay = LOCK_DELAY
+      @x -= 1
+    end
   end
 
   def can_go_left?
@@ -203,7 +213,10 @@ class BoardState
   end
 
   def move_right
-    @x += 1 if can_go_right?
+    if can_go_right?
+      @x += 1
+      @lock_delay = LOCK_DELAY
+    end
   end
 
   def can_go_right?
@@ -212,17 +225,25 @@ class BoardState
   end
 
   def move_down
-    @y += 1 if can_drop?
+    if can_drop?
+      @y += 1
+      @lock_delay = LOCK_DELAY
+    end
   end
 
   def move_down!
     @y += 1
+    @lock_delay = LOCK_DELAY
   end
 
   def can_drop?
     board_section = board_section_for(@x, @y, 0, 1)
     result = !collides?(board_section, @shape_bitmaps[@shape_name][@shape_orientation])
     result
+  end
+
+  def lock_delay_elapsed?
+    @lock_delay <= 0
   end
 
   def save_current_position
@@ -596,13 +617,16 @@ class MainGame
 
         @game_state.board_state.render_if_moved(@dc2d)
 
+        @game_state.board_state.decrement_lock_deloy
         next unless (@game_state.frame % 3) == 0
 
         @game_state.board_state.save_current_position
 
+        # Go to top if tick has not reached current wait
         @game_state.tick = (@game_state.tick + 1) % @game_state.curr_wait
         next unless @game_state.tick == 0
 
+        # Make dropping faster
         @game_state.ticks_since_wait_change += 1
         if @game_state.ticks_since_wait_change >= 30
           @game_state.curr_wait -= 1 unless @game_state.curr_wait == 1
@@ -611,7 +635,7 @@ class MainGame
 
         if @game_state.board_state.can_drop?
           @game_state.board_state.move_down!
-        else
+        elsif @game_state.board_state.lock_delay_elapsed?
           @game_state.board_state.save_to_board
           @game_state.board_state.whiten_curr_pos
           @game_state.board_state.whiten_full_rows
