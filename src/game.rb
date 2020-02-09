@@ -116,11 +116,17 @@ class BoardState
   end
 
   def clockwise
-    @shape_orientation = next_orientation(@shape_orientation) if can_rotate_cw?
+    if can_rotate_cw?
+      @shape_orientation = next_orientation(@shape_orientation)
+      @lock_delay = LOCK_DELAY
+    end
   end
 
   def anticlockwise
-    @shape_orientation = previous_orientation(@shape_orientation) if can_rotate_anticw?
+    if can_rotate_anticw?
+      @shape_orientation = previous_orientation(@shape_orientation)
+      @lock_delay = LOCK_DELAY
+    end
   end
 
   def zero_if_negative(x)
