@@ -514,7 +514,7 @@ class GameState
   end
 
   def exit_input?(frame_idxs)
-    frame_idxs.any? { |idx| @cont[:start] & @button_states[idx] != 0 }
+    frame_idxs.any? { |idx| @cont[:start] & @button_states[idx] != 0 && @cont[:a] & @button_states[idx] != 0 && @cont[:b] & @button_states[idx] != 0 }
   end
 
   def update_board_for_indices(frame_idxs, dc2d)
@@ -582,7 +582,7 @@ class MainGame
     exiting = false
 
     while !exiting do # 'main loop'
-      # wait_for_start_button
+      wait_for_start_button
       running = true
 
       @game_state.reset
