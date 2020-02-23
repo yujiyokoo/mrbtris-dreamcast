@@ -1,6 +1,6 @@
 # mrbtris: Sample game for Sega Dreamcast written in Ruby
 
-**mrbtris** is a simple game for the **Sega Dreamcast** which is written in **Ruby** as an proof-of-concept of using the [mruby](https://mruby.org/) implementation on the Sega Dreamcast. This project was written by @yujiyokoo.
+**mrbtris** is a simple game for the **Sega Dreamcast** which is written in **Ruby** as an proof-of-concept of using the [mruby](https://mruby.org/) implementation on the Sega Dreamcast. This project was written by [@yujiyokoo](https://github.com/yujiyokoo).
 
 This project is built on the top of [KallistiOS](https://en.wikipedia.org/wiki/KallistiOS) (KOS), which is the low-level library used to interact with the Sega Dreamcast hardware. Usually, programs written for the Sega Dreamcast are in **C/C++**, this project aims to demonstrate the use of Ruby source code targeting the Sega Dreamcast.
 
