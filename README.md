@@ -9,7 +9,7 @@ This project aims to provide a simple example of how to use **KallistiOS** (KOS)
 ## Demonstration
 
 Below you may find a video of this game running on the real hardware.
-![#mrbtris running on Sega Dreamcast](https://i.imgur.com/sU9gnJR.png)](https://vimeo.com/335686570)
+[![#mrbtris running on Sega Dreamcast](https://i.imgur.com/sU9gnJR.png)](https://vimeo.com/335686570)
 
 ## TODO
 
