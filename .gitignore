@@ -1,11 +1,11 @@
 .DS_Store
-
 *.o
 *.elf
 romdisk.*
 test_bin
-
 README.html
-
 game.c
 test_suite.c
+mrbtris.bin
+mrbtris.cdi
+cd_root/1ST_READ.BIN

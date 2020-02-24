@@ -9,10 +9,9 @@ MRB_BYTECODE = src/game.c
 
 KOS_ROMDISK_DIR = romdisk
 
-MRB_ROOT = /usr/src/mruby-host
-MRB_SH4_ROOT = /usr/src/mruby-sh4
+MRB_ROOT = /opt/mruby
 
-CFLAGS = -I$(MRB_SH4_ROOT)/include/ -L$(MRB_SH4_ROOT)/build/host/lib/
+CFLAGS = -I$(MRB_ROOT)/include/ -L$(MRB_ROOT)/build/dreamcast/lib/
 
 all: rm-elf $(TARGET)
 
@@ -25,7 +24,7 @@ rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
 $(TARGET): $(OBJS) $(MRB_BYTECODE)
-	kos-cc $(CFLAGS) -o $(TARGET) $(OBJS) -lmruby -lmruby_core -lm
+	kos-cc $(CFLAGS) -o $(TARGET) $(OBJS) -lmruby -lm
 
 $(MRB_BYTECODE): src/start_game.rb src/game.rb
 	$(MRB_ROOT)/bin/mrbc -g -Bgame -o src/game.c $(MRB_SOURCES)
