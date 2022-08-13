@@ -1,4 +1,4 @@
-TARGET = mrbtris.elf
+TARGET = mrbtris.bin
 
 OBJS = src/mrbtris.o src/main.o src/game.o romdisk.o
 
@@ -23,7 +23,10 @@ clean:
 rm-elf:
 	-rm -f $(TARGET) romdisk.*
 
-$(TARGET): $(OBJS) $(MRB_BYTECODE)
+$(TARGET): mrbtris.elf
+	sh-elf-objcopy -R .stack -O binary mrbtris.elf mrbtris.bin
+
+mrbtris.elf: $(OBJS) $(MRB_BYTECODE)
 	kos-cc $(CFLAGS) -o $(TARGET) $(OBJS) -lmruby -lm
 
 $(MRB_BYTECODE): src/start_game.rb src/game.rb
