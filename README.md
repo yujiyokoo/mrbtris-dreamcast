@@ -8,7 +8,7 @@ This project aims to provide a simple example of how to use **KallistiOS** (KOS)
 
 ## Demonstration
 
-Below you may find a video of this game running on the real hardware.
+Below you may find a video of this game running on the real hardware (early version):
 [![#mrbtris running on Sega Dreamcast](https://i.imgur.com/sU9gnJR.png)](https://vimeo.com/335686570)
 
 ## TODO
@@ -28,7 +28,7 @@ Below you may find a video of this game running on the real hardware.
 
 If you have a working [KallistiOS](http://gamedev.allusion.net/softprj/kos/) environment, you will have to install the `rake` and `bison` packages (e.g. using `apt`, `brew` or `pacman`). If you are using [DreamSDK](https://dreamsdk.org), you will have to install the [RubyInstaller](https://rubyinstaller.org/) package separately, in that case, `rake` should be available in the `PATH` environment variable.
 
-Install  `mruby`:
+Install `mruby`:
 
 	cd /opt
 	git clone https://github.com/mruby/mruby.git
@@ -62,9 +62,7 @@ Unfortunately, running on the real hardware has been the only way for me to test
 
 If you want to try this software in your real Dreamcast and/or in an another emulator (like [Demul, Redream, Reicast](https://dreamcast.wiki/Dreamcast_emulators)...), you may create a **Padus DiscJuggler** (`cdi`) image. For example, if you are using [DreamSDK](https://dreamsdk.org), you may do the following:
 
-	make dist
-	elf2bin mrbtris.elf
-	scramble mrbtris.bin cd_root/1ST_READ.BIN
+	make dist	
 	makedisc mrbtris.cdi cd_root
 
 This will produces the `mrbtris.cdi` image file that you may burn onto a CD-R or use in a Dreamcast emulator. Alternatively, you may use [BootDreams](https://dcemulation.org/index.php?title=BootDreams) (on Windows) or similar tools. If you are on non-Windows systems, you may check the [img4dc source code](https://github.com/Kazade/img4dc).
@@ -72,4 +70,10 @@ This will produces the `mrbtris.cdi` image file that you may burn onto a CD-R or
 ### Using dcload/dc-tool (part of KallistiOS)
 
 If you have a [Coders Cable](https://dreamcast.wiki/Coder%27s_cable) or a [Broadband Adapter](https://dreamcast.wiki/Broadband_adapter) (BBA) / [LAN Adapter](https://dreamcast.wiki/LAN_adapter), you could also the `dcload` program (part of **KallistiOS**) to load it directly on the Sega Dreamcast. It should load as a normal Sega Dreamcast program.
+
+To do that, you may enter the following:
+
+	make run
+
+This will execute `dc-tool` using the `mrbtris.elf` binary file as target.
 
