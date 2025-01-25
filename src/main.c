@@ -17,11 +17,6 @@
    the current KOS defaults, use INIT_DEFAULT (or leave it out entirely). */
 KOS_INIT_FLAGS(INIT_DEFAULT | INIT_MALLOCSTATS);
 
-/* You can safely remove this line if you don't use a ROMDISK */
-extern uint8 romdisk[];
-/* And specify a romdisk, if you want one (or leave it out) */
-KOS_INIT_ROMDISK(romdisk);
-
 extern const uint8_t game[]; // declared in the rb file
 
 int main(int argc, char **argv) {
