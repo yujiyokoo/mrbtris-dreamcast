@@ -1,5 +1,6 @@
 #include <kos.h>
 #include <mruby.h>
+#include <mruby/internal.h>
 #include <mruby/data.h>
 #include <mruby/string.h>
 #include <mruby/error.h>
@@ -25,8 +26,6 @@ static mrb_value btn_mrb_buffer;
 
 // buf has to be BUFSIZE elements at least
 void *read_buttons() {
-  int curr = 0;
-  int prev = 0;
   while(1) {
     input_buf.index = (input_buf.index + 1) % BUFSIZE;
     //printf("index: %" PRIu32 "\n", buf_index);
