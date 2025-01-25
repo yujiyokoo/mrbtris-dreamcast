@@ -172,9 +172,6 @@ class BoardState
         (curr_shape_orientation[3][3] ? 1 : 0 )
       }
     }
-    puts "---------------------------------------------------------"
-    p @shape_bitmaps
-    puts "---------------------------------------------------------"
   end
 
   def row(row_idx, l, r, left_outside_area, right_outside_area)

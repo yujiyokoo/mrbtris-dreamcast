@@ -4,6 +4,7 @@
 #include <mruby/string.h>
 #include <mruby/error.h>
 #include <mruby/array.h>
+#include <mruby/internal.h> // mrb_get_backtrace has moved here
 #include <stdio.h>
 #include <inttypes.h>
 
@@ -208,52 +209,52 @@ static mrb_value get_button_states(mrb_state *mrb, mrb_value self) {
 }
 
 static mrb_value start_btn(mrb_state *mrb, mrb_value self) {
-  struct mrb_value state;
+  mrb_int state;
   mrb_get_args(mrb, "i", &state);
 
-  return mrb_bool_value(mrb_fixnum(state) & CONT_START);
+  return mrb_bool_value(state & CONT_START);
 }
 
 static mrb_value dpad_left(mrb_state *mrb, mrb_value self) {
-  struct mrb_value state;
+  mrb_int state;
   mrb_get_args(mrb, "i", &state);
 
-  return mrb_bool_value(mrb_fixnum(state) & CONT_DPAD_LEFT);
+  return mrb_bool_value(state & CONT_DPAD_LEFT);
 }
 
 static mrb_value dpad_right(mrb_state *mrb, mrb_value self) {
-  struct mrb_value state;
+  mrb_int state;
   mrb_get_args(mrb, "i", &state);
 
-  return mrb_bool_value(mrb_fixnum(state) & CONT_DPAD_RIGHT);
+  return mrb_bool_value(state & CONT_DPAD_RIGHT);
 }
 
 static mrb_value dpad_up(mrb_state *mrb, mrb_value self) {
-  struct mrb_value state;
+  mrb_int state;
   mrb_get_args(mrb, "i", &state);
 
-  return mrb_bool_value(mrb_fixnum(state) & CONT_DPAD_UP);
+  return mrb_bool_value(state & CONT_DPAD_UP);
 }
 
 static mrb_value dpad_down(mrb_state *mrb, mrb_value self) {
-  struct mrb_value state;
+  mrb_int state;
   mrb_get_args(mrb, "i", &state);
 
-  return mrb_bool_value(mrb_fixnum(state) & CONT_DPAD_DOWN);
+  return mrb_bool_value(state & CONT_DPAD_DOWN);
 }
 
 static mrb_value btn_b(mrb_state *mrb, mrb_value self) {
-  struct mrb_value state;
+  mrb_int state;
   mrb_get_args(mrb, "i", &state);
 
-  return mrb_bool_value(mrb_fixnum(state) & CONT_B);
+  return mrb_bool_value(state & CONT_B);
 }
 
 static mrb_value btn_a(mrb_state *mrb, mrb_value self) {
-  struct mrb_value state;
+  mrb_int state;
   mrb_get_args(mrb, "i", &state);
 
-  return mrb_bool_value(mrb_fixnum(state) & CONT_A);
+  return mrb_bool_value(state & CONT_A);
 }
 
 mrb_value get_button_masks(mrb_state *mrb, mrb_value self) {
@@ -279,10 +280,10 @@ static mrb_value clear_score(mrb_state *mrb, mrb_value self) {
 }
 
 static mrb_value render_score(mrb_state *mrb, mrb_value self) {
-  struct mrb_value score;
+  mrb_int score;
   mrb_get_args(mrb, "i", &score);
   char buf[20];
-  snprintf(buf, 20, "Score: %8" PRId32, mrb_fixnum(score));
+  snprintf(buf, 20, "Score: %8" PRId32, score);
   bfont_draw_str(vram_s + 640 * 100 + 16, 640, 1, buf);
 
   return mrb_nil_value();
